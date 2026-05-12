@@ -1,0 +1,172 @@
+
+* { 
+    margin: 0;
+    padding: 0; 
+    box-sizing: border-box; 
+}
+body {
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: white;
+}
+.contenedor { display: flex;
+    min-height: 100vh;
+}
+.sidebar {
+    width: 230px;
+    background: #1a1a1a;
+    padding: 28px 18px;
+    border-right: 1px solid #2f2f2f;
+    flex-shrink: 0;
+}
+.sidebar h2 {
+    font-size: 20px;
+    color: #fbc02d;
+    margin-bottom: 28px;
+    line-height: 1.3;
+}
+
+.sidebar ul { list-style: none; padding: 0; margin: 0; }
+
+.sidebar li {
+    padding: 12px 14px;
+    margin-bottom: 6px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    font-size: 15px;
+}
+
+.sidebar li:hover,
+.sidebar li:focus {
+    background: #2a2a2a;
+    color: #fbc02d;
+    outline: 2px solid #fbc02d;
+    outline-offset: -2px;
+}
+
+.sidebar li.activo {
+    background: #2a2a2a;
+    color: #fbc02d;
+    font-weight: bold;
+}
+.principal { flex: 1; padding: 28px; overflow-x: hidden; }
+
+.topbar { margin-bottom: 24px; }
+.topbar h1 { font-size: 28px; color: white; }
+.topbar p  { color: #bbb; margin-top: 4px; font-size: 14px; }
+.panel {
+    background: #1a1a1a;
+    padding: 22px;
+    border-radius: 14px;
+    border: 1px solid #2f2f2f;
+    margin-bottom: 20px;
+}
+.panel h2 { color: #fbc02d; font-size: 18px; margin-bottom: 16px; }
+
+/* Cuadros dashboard */
+.card-dash {
+    background: #1e1e1e;
+    border: 1px solid #2f2f2f;
+    border-radius: 14px;
+    padding: 22px;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+    text-align: center;
+}
+.card-dash:hover { transform: translateY(-4px); border-color: #fbc02d; }
+.card-dash h3 { font-size: 26px; color: #fbc02d; margin-bottom: 6px; }
+.card-dash p  { color: #bbb; font-size: 13px; margin: 0; }
+.card-dash small { color: #666; font-size: 11px; }
+
+/* Tablas  */
+.table-dark {
+    --bs-table-bg: #1a1a1a;
+    --bs-table-hover-bg: #222;
+    --bs-table-border-color: #333;
+}
+.table-dark td, .table-dark th { vertical-align: middle; }
+.table thead.table-warning th { color: #111 !important; font-weight: 600; }
+
+/*Botones */
+.btn-warning {
+    background-color: #fbc02d !important;
+    border-color: #fbc02d !important;
+    color: #111 !important;
+}
+.btn-warning:hover { background-color: #ffd54f !important; border-color: #ffd54f !important; }
+.btn-outline-warning { border-color: #fbc02d !important; color: #fbc02d !important; }
+.btn-outline-warning:hover { background-color: #fbc02d !important; color: #111 !important; }
+
+/*Formularios*/
+.form-control, .form-select {
+    background-color: #222 !important;
+    border-color: #444 !important;
+    color: white !important;
+    border-radius: 8px;
+}
+.form-control:focus, .form-select:focus {
+    background-color: #2a2a2a !important;
+    border-color: #fbc02d !important;
+    box-shadow: 0 0 0 0.2rem rgba(251,192,45,0.25) !important;
+    color: white !important;
+}
+.form-control::placeholder { color: #666; }
+.form-label { color: #ccc; font-size: 14px; margin-bottom: 4px; }
+.invalid-feedback { color: #f44336; font-size: 12px; }
+
+/* Modal oscuro */
+.modal-content {
+    background: #1a1a1a !important;
+    border: 1px solid #333 !important;
+    color: white !important;
+}
+.modal-header { border-bottom: 1px solid #333 !important; }
+.modal-footer { border-top: 1px solid #333 !important; }
+.modal-title { color: #fbc02d !important; }
+.btn-close { filter: invert(1); }
+
+/*Stock bajo resaltado*/
+.stock-bajo { color: #f44336 !important; font-weight: bold; }
+.stock-ok   { color: #4caf50; }
+
+/*Carrito*/
+#listaVenta li {
+    padding: 8px 0;
+    border-bottom: 1px solid #333;
+    font-size: 14px;
+}
+#listaVenta li:last-child { border-bottom: none; }
+
+/*método de pago */
+.badge-pago {
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #2a2a2a;
+    color: #fbc02d;
+    border: 1px solid #fbc02d;
+}
+
+/*Responsive */
+@media (max-width: 900px) {
+    .contenedor { flex-direction: column; }
+    .sidebar {
+        width: 100%;
+        padding: 14px 18px;
+        border-right: none;
+        border-bottom: 1px solid #2f2f2f;
+    }
+    .sidebar h2 { margin-bottom: 10px; font-size: 17px; }
+    .sidebar ul { display: flex; flex-wrap: wrap; gap: 6px; }
+    .sidebar li { padding: 7px 12px; margin-bottom: 0; background: #222; border-radius: 20px; font-size: 13px; }
+    .principal { padding: 14px; }
+    .topbar h1 { font-size: 20px; }
+    .panel { padding: 14px; }
+}
+
+@media (max-width: 480px) {
+    .topbar h1 { font-size: 17px; }
+    .card-dash h3 { font-size: 20px; }
+}

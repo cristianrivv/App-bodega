@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Inicio — Bodega Don Carlos</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/css/estilos.css">
+    </head>
+    <body>
+    <div class="contenedor">
+        <aside class="sidebar" role="navigation" aria-label="Menú principal">
+            <h2>🛒 Bodega<br>Don Carlos</h2>
+            <ul role="menubar">
+                <li class="activo" role="menuitem" tabindex="0"
+                    onclick="window.location.href='/'" aria-current="page">
+                    🏠 Inicio
+                </li>
+                <li role="menuitem" tabindex="0"
+                    onclick="window.location.href='/pagina/productos'">
+                    📦 Productos
+                </li>
+                <li role="menuitem" tabindex="0"
+                    onclick="window.location.href='/pagina/ventas'">
+                    🛒 Ventas
+                </li>
+            </ul>
+        </aside>
+        <!-- PRINCIPAL -->
+        <main class="principal" role="main" aria-label="Panel principal">
+            <section class="topbar">
+                <h1>Panel Principal</h1>
+                <p>Resumen del negocio — haz clic en cada tarjeta para ver el detalle</p>
+            </section>
+            <!-- TARJETAS -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="card-dash"
+                        role="button" tabindex="0"
+                        onclick="abrirModal('hoy')"
+                        aria-label="Ver detalle de ventas de hoy">
+                        <h3 id="ventasHoy">S/0.00</h3>
+                        <p>Ventas Hoy</p>
+                        <small>Click para ver detalle</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card-dash"
+                        role="button" tabindex="0"
+                        onclick="abrirModal('mes')"
+                        aria-label="Ver detalle de ganancias del mes">
+                        <h3 id="gananciaMes">S/0.00</h3>
+                        <p>Ganancia Mensual</p>
+                        <small>Click para ver detalle</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card-dash"
+                        role="button" tabindex="0"
+                        onclick="abrirModal('top')"
+                        aria-label="Ver top de productos más vendidos">
+                        <h3 id="masVendido" style="font-size:18px;">—</h3>
+                        <p>Top Más Vendidos</p>
+                        <small>Click para ver ranking</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card-dash"
+                        role="button" tabindex="0"
+                        onclick="abrirModal('stock')"
+                        aria-label="Ver productos con stock bajo">
+                        <h3 id="stockBajo">0</h3>
+                        <p>Stock Bajo</p>
+                        <small>Click para ver cuáles</small>
+                    </div>
+                </div>
+            </div>
+            <div class="panel">
+                <h2>Accesos rápidos</h2>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-warning fw-bold"
+                            onclick="window.location.href='/pagina/productos'"
+                            aria-label="Ir a registrar productos">
+                        Registrar Producto
+                    </button>
+                    <button class="btn btn-outline-warning fw-bold"
+                            onclick="window.location.href='/pagina/ventas'"
+                            aria-label="Ir a registrar ventas">
+                        Nueva Venta
+                    </button>
+                </div>
+            </div>
+            <!-- ÚLTIMAS 5 VENTAS -->
+            <div class="panel">
+                <h2>Últimas ventas</h2>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover table-bordered mb-0"
+                        aria-label="Últimas ventas del sistema">
+                        <thead class="table-warning text-dark">
+                            <tr>
+                                <th scope="col">Código</th>
+                                <th scope="col">Fecha</th>
+                                <th scope="col">Total</th>
+                                <th scope="col">Pago</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaUltimasVentas" aria-live="polite"></tbody>
+                    </table>
+                </div>
+                <p id="sinVentas" class="text-secondary text-center py-2 mb-0">
+                    No hay ventas registradas aún.
+                </p>
+            </div>
+
+        </main>
+    </div>
+    <div class="modal fade" id="modalDetalle" tabindex="-1"
+        aria-labelledby="modalTitulo" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitulo">Detalle</h5>
+                    <button type="button" class="btn-close"
+                            data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body" id="modalCuerpo">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-warning"
+                            data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+        <div id="toastNotif" class="toast align-items-center text-bg-warning border-0"
+            role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body fw-bold" id="toastMensaje"></div>
+                <button type="button" class="btn-close btn-close-dark me-2 m-auto"
+                        data-bs-dismiss="toast" aria-label="Cerrar"></button>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/script/inicio.js"></script>
+    </body>
+</html>
