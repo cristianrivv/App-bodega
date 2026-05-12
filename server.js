@@ -14,6 +14,7 @@ app.use(express.json());
 /*Archivos estáticos */
 app.use("/css",    express.static(path.join(__dirname, "css")));
 app.use("/script", express.static(path.join(__dirname, "script")));
+app.use("/Cuerpo", express.static(path.join(__dirname, "Cuerpo")));
 /*Páginas HTML */
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "Cuerpo", "Inicio.html"));
