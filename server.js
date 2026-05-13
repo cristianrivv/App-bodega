@@ -4,7 +4,7 @@ const path    = require("path");
 const fs      = require("fs").promises;
 
 const app     = express();
-const PUERTO  = 3000;
+const PORT = process.env.PORT || 5000;
 const RUTA_BD = path.join(__dirname, "datos.json");
 
 /*Middleware */
@@ -14,7 +14,6 @@ app.use(express.json());
 /*Archivos estáticos */
 app.use("/css",    express.static(path.join(__dirname, "css")));
 app.use("/script", express.static(path.join(__dirname, "script")));
-app.use("/Cuerpo", express.static(path.join(__dirname, "Cuerpo")));
 /*Páginas HTML */
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "Cuerpo", "Inicio.html"));
@@ -64,7 +63,7 @@ app.get("/productos-api", async (req, res) => {
 /* POST /productos — registrar nuevo */
 app.post("/api/productos", async (req, res) => {
     try {
-        let { codigo, nombre, precio, stock, unidad, fechaReabastecimiento } = req.body;
+        let { codigo, nombre, marca, precio, stock, unidad, vencimiento, fechaReabastecimiento } = req.body;
         if (!codigo || !nombre || precio == null || stock == null) {
             return res.status(400).json({ error: "Datos incompletos" });
         }
@@ -75,8 +74,9 @@ app.post("/api/productos", async (req, res) => {
         if (datos.productos.find(p => p.codigo === codigo)) {
             return res.status(409).json({ error: "Código ya existe" });
         }
-        datos.productos.push({ codigo, nombre, precio, stock,
+        datos.productos.push({ codigo, nombre, marca: marca || "—", precio, stock,
                                 unidad: unidad || "unid.",
+                                vencimiento: vencimiento || "—",
                                 fechaReabastecimiento: fechaReabastecimiento || "—" });
         await guardarDatos(datos);
         res.status(201).json({ mensaje: "Producto guardado", codigo });
@@ -90,17 +90,19 @@ app.post("/api/productos", async (req, res) => {
 app.put("/api/productos/:codigo", async (req, res) => {
     try {
         let codigo = req.params.codigo;
-        let { nombre, precio, stock, unidad, fechaReabastecimiento } = req.body;
+        let { nombre, marca, precio, stock, unidad, vencimiento, fechaReabastecimiento } = req.body;
         if (!nombre || precio == null || stock == null) {
             return res.status(400).json({ error: "Datos incompletos" });
         }
         let datos = await leerDatos();
         let prod  = datos.productos.find(p => p.codigo === codigo);
         if (!prod) return res.status(404).json({ error: "Producto no encontrado" });
-        prod.nombre  = nombre;
-        prod.precio  = precio;
-        prod.stock   = stock;
-        prod.unidad  = unidad || prod.unidad || "unid.";
+        prod.nombre      = nombre;
+        prod.marca       = marca || prod.marca || "—";
+        prod.precio      = precio;
+        prod.stock       = stock;
+        prod.unidad      = unidad || prod.unidad || "unid.";
+        prod.vencimiento = vencimiento || prod.vencimiento || "—";
         prod.fechaReabastecimiento = fechaReabastecimiento || prod.fechaReabastecimiento || "—";
         await guardarDatos(datos);
         res.json({ mensaje: "Producto actualizado", codigo });
@@ -196,10 +198,9 @@ app.delete("/api/ventas/:codigo", async (req, res) => {
 
 async function iniciar() {
     await leerDatos(); /* asegura que datos.json si existe */
-    app.listen(PUERTO, () => {
-        console.log("Servidor corriendo en http://localhost:" + PUERTO);
-        console.log("Archivo de datos: " + RUTA_BD);
-    });
+    app.listen(PORT, () => {
+    console.log(`Servidor corriendo en puerto ${PORT}`);
+});
 }
 
 iniciar();
