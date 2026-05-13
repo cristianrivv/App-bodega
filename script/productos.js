@@ -30,19 +30,28 @@ function validarRegistro() {
 
 async function registrarProducto() {
     if (!validarRegistro()) return;
-    let nombre = document.getElementById("nombre").value.trim();
-    let precio = parseFloat(document.getElementById("precio").value);
-    let stock  = parseInt(document.getElementById("stock").value);
-    let unidad = document.getElementById("unidad").value;
-    let codigo = "P" + String(contador).padStart(3,"0");
+    let nombre     = document.getElementById("nombre").value.trim();
+    let precio     = parseFloat(document.getElementById("precio").value);
+    let stock      = parseInt(document.getElementById("stock").value);
+    let unidad     = document.getElementById("unidad").value;
+    let marca      = document.getElementById("marca").value.trim();
+    let vencInput  = document.getElementById("vencimiento").value;
+    let codigo     = "P" + String(contador).padStart(3,"0");
+
+    /* Formatear vencimiento a DD/MM/AAAA si fue ingresado */
+    let vencimiento = "—";
+    if (vencInput) {
+        let p = vencInput.split("-");
+        vencimiento = p[2] + "/" + p[1] + "/" + p[0];
+    }
 
     let hoy = new Date();
     let fechaRegistro =
         hoy.getDate().toString().padStart(2,"0") + "/" +
         (hoy.getMonth()+1).toString().padStart(2,"0") + "/" +
         hoy.getFullYear();
-    let nuevo = { codigo, nombre, precio, stock, unidad,
-        fechaReabastecimiento: fechaRegistro };
+    let nuevo = { codigo, nombre, marca: marca || "—", precio, stock, unidad,
+        vencimiento, fechaReabastecimiento: fechaRegistro };
     try {
         let res = await fetch("/api/productos", {
             method: "POST",
@@ -84,14 +93,29 @@ function mostrarProductos() {
         let iconStock = p.stock === 0 ? "🚫" : p.stock <= 5 ? "⚠️" : "";
         let fechaR    = p.fechaReabastecimiento || "—";
         let unidad    = p.unidad || "unid.";
+        let marca     = p.marca || "—";
+
+        /* Lógica de vencimiento */
+        let vencTexto = p.vencimiento || "—";
+        let vencClase = "";
+        if (p.vencimiento && p.vencimiento !== "—") {
+            let partes = p.vencimiento.split("/");
+            let fechaVenc = new Date(partes[2], partes[1]-1, partes[0]);
+            let hoy = new Date();
+            let diasRestantes = Math.ceil((fechaVenc - hoy) / (1000 * 60 * 60 * 24));
+            if (diasRestantes < 0)        { vencClase = "text-danger fw-bold"; vencTexto += " 🚫"; }
+            else if (diasRestantes <= 30) { vencClase = "stock-bajo";          vencTexto += " ⚠️"; }
+        }
 
         tbody.innerHTML += `
         <tr>
             <td>${p.codigo}</td>
             <td>${p.nombre}</td>
+            <td><small>${marca}</small></td>
             <td>S/${p.precio.toFixed(2)}</td>
             <td class="${claseStock}">${p.stock} ${iconStock}</td>
             <td><span class="badge-pago">${unidad}</span></td>
+            <td class="${vencClase}"><small>${vencTexto}</small></td>
             <td><small>${fechaR}</small></td>
             <td>
                 <button class="btn btn-sm btn-outline-warning me-1"
@@ -112,12 +136,21 @@ function abrirModalEditar(index) {
     let p = productos[index];
     document.getElementById("editCodigo").value          = p.codigo;
     document.getElementById("editNombre").value          = p.nombre;
+    document.getElementById("editMarca").value           = p.marca === "—" ? "" : (p.marca || "");
     document.getElementById("editPrecio").value          = p.precio;
     document.getElementById("editStockNuevo").value      = p.stock;
     document.getElementById("editStockActual").textContent = p.stock;
     document.getElementById("editUnidadActual").textContent = " " + (p.unidad || "unid.");
     let selUnidad = document.getElementById("editUnidad");
     selUnidad.value = p.unidad || "unid.";
+
+    /* Cargar vencimiento en formato AAAA-MM-DD para el input date */
+    let vencISO = "";
+    if (p.vencimiento && p.vencimiento !== "—") {
+        let partes = p.vencimiento.split("/");
+        vencISO = partes[2] + "-" + partes[1] + "-" + partes[0];
+    }
+    document.getElementById("editVencimiento").value = vencISO;
     /* Fecha de hoy por defecto */
     let hoy = new Date();
     let fechaISO = hoy.getFullYear() + "-" +
@@ -139,11 +172,18 @@ async function guardarEdicion() {
     let precioInput  = document.getElementById("editPrecio");
     let stockInput   = document.getElementById("editStockNuevo");
     let fechaInput   = document.getElementById("editFechaReabastecimiento");
-    let nombre = nombreInput.value.trim();
-    let precio = parseFloat(precioInput.value);
-    let stock  = parseInt(stockInput.value);
-    let unidad = document.getElementById("editUnidad").value;
-    let ok     = true;
+    let nombre  = nombreInput.value.trim();
+    let precio  = parseFloat(precioInput.value);
+    let stock   = parseInt(stockInput.value);
+    let unidad  = document.getElementById("editUnidad").value;
+    let marca   = document.getElementById("editMarca").value.trim() || "—";
+    let vencInput = document.getElementById("editVencimiento").value;
+    let vencimiento = "—";
+    if (vencInput) {
+        let p2 = vencInput.split("-");
+        vencimiento = p2[2] + "/" + p2[1] + "/" + p2[0];
+    }
+    let ok = true;
 
     if (!nombre) { nombreInput.classList.add("is-invalid"); ok = false; }
     else nombreInput.classList.remove("is-invalid");
@@ -159,8 +199,8 @@ async function guardarEdicion() {
         let partes = fechaInput.value.split("-");
         fechaFormateada = partes[2] + "/" + partes[1] + "/" + partes[0];
     }
-    let datosActualizados = { codigo, nombre, precio, stock, unidad,
-        fechaReabastecimiento: fechaFormateada };
+    let datosActualizados = { codigo, nombre, marca, precio, stock, unidad,
+        vencimiento, fechaReabastecimiento: fechaFormateada };
     try {
         let res = await fetch("/api/productos/" + codigo, {
             method: "PUT",
@@ -203,7 +243,7 @@ async function eliminarProducto(index) {
     }
 }
 function limpiarFormulario() {
-    ["nombre","precio","stock"].forEach(function(id) {
+    ["nombre","precio","stock","marca","vencimiento"].forEach(function(id) {
         let el = document.getElementById(id);
         el.value = "";
         el.classList.remove("is-invalid","is-valid");
