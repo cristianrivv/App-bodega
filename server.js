@@ -34,46 +34,55 @@ async function guardarDatos(datos) {
 
 /* API PRODUCTOS */
 app.get("/api/productos", async (req, res) => {
-    let datos = await leerDatos();
-    res.json(datos.productos);
+    try {
+        let datos = await leerDatos();
+        res.json(datos.productos);
+    } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
 app.post("/api/productos", async (req, res) => {
-    let { codigo, nombre, precio, stock, stockMinimo, unidad, marca } = req.body;
-    let datos = await leerDatos();
-    datos.productos.push({
-        codigo, nombre, precio, stock, 
-        stockMinimo: parseInt(stockMinimo) || 5, 
-        unidad, marca, activo: true 
-    });
-    await guardarDatos(datos);
-    res.status(201).json({ mensaje: "Guardado" });
+    try {
+        let { codigo, nombre, marca, precio, stock, unidad, stockMinimo } = req.body;
+        let datos = await leerDatos();
+        datos.productos.push({
+            codigo, nombre, marca: marca || "—", precio, stock,
+            unidad: unidad || "unid.", 
+            stockMinimo: parseInt(stockMinimo) || 5, 
+            activo: true
+        });
+        await guardarDatos(datos);
+        res.status(201).json({ mensaje: "Guardado" });
+    } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
 app.put("/api/productos/:codigo/stock", async (req, res) => {
-    let { stock } = req.body;
-    let datos = await leerDatos();
-    let prod = datos.productos.find(p => p.codigo === req.params.codigo);
-    if (prod) {
-        prod.stock = stock;
-        await guardarDatos(datos);
-        res.json({ mensaje: "Stock actualizado" });
-    } else {
-        res.status(404).send();
-    }
+    try {
+        let { stock } = req.body;
+        let datos = await leerDatos();
+        let prod = datos.productos.find(p => p.codigo === req.params.codigo);
+        if (prod) {
+            prod.stock = stock;
+            await guardarDatos(datos);
+            res.json({ mensaje: "Stock actualizado" });
+        } else { res.status(404).json({ error: "No encontrado" }); }
+    } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
 /* API VENTAS */
 app.get("/api/ventas", async (req, res) => {
-    let datos = await leerDatos();
-    res.json(datos.ventas);
+    try {
+        let datos = await leerDatos();
+        res.json(datos.ventas);
+    } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
 app.post("/api/ventas", async (req, res) => {
-    let datos = await leerDatos();
-    datos.ventas.push(req.body);
-    await guardarDatos(datos);
-    res.status(201).json({ mensaje: "Venta guardada" });
+    try {
+        let datos = await leerDatos();
+        datos.ventas.push(req.body);
+        await guardarDatos(datos);
+        res.status(201).json({ mensaje: "Venta guardada" });
+    } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
 app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));
