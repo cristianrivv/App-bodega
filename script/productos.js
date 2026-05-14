@@ -33,6 +33,8 @@ async function registrarProducto() {
     let nombre     = document.getElementById("nombre").value.trim();
     let precio     = parseFloat(document.getElementById("precio").value);
     let stock      = parseInt(document.getElementById("stock").value);
+    let stock      = parseInt(document.getElementById("stock").value);
+    let stockMinimo = parseInt(document.getElementById("stockMinimo").value) || 5;
     let unidad     = document.getElementById("unidad").value;
     let marca      = document.getElementById("marca").value.trim();
     let vencInput  = document.getElementById("vencimiento").value;
@@ -50,8 +52,25 @@ async function registrarProducto() {
         hoy.getDate().toString().padStart(2,"0") + "/" +
         (hoy.getMonth()+1).toString().padStart(2,"0") + "/" +
         hoy.getFullYear();
-    let nuevo = { codigo, nombre, marca: marca || "—", precio, stock, unidad,
-        vencimiento, fechaReabastecimiento: fechaRegistro };
+    let nuevo = {
+
+    codigo,
+    nombre,
+    marca: marca || "—",
+
+    precio,
+    stock,
+
+    unidad,
+
+    vencimiento,
+
+    fechaReabastecimiento: fechaRegistro,
+
+    stockMinimo,
+
+    activo: true
+};
     try {
         let res = await fetch("/api/productos", {
             method: "POST",
@@ -73,65 +92,77 @@ async function registrarProducto() {
         console.error(e);
     }
 }
-
 function mostrarProductos() {
     let tbody  = document.getElementById("tablaProductos");
     let sinMsg = document.getElementById("sinProductos");
     tbody.innerHTML = "";
-
-    if (productos.length === 0) {
+    let visibles = productos.filter(p => p.activo !== false);
+    if (visibles.length === 0) {
         sinMsg.classList.remove("d-none");
         return;
     }
     sinMsg.classList.add("d-none");
-
-    productos.forEach(function(p, i) {
-        let claseStock = p.stock === 0
-            ? "text-danger fw-bold"
-            : p.stock <= 5 ? "stock-bajo" : "stock-ok";
-
-        let iconStock = p.stock === 0 ? "🚫" : p.stock <= 5 ? "⚠️" : "";
-        let fechaR    = p.fechaReabastecimiento || "—";
-        let unidad    = p.unidad || "unid.";
-        let marca     = p.marca || "—";
-
-        /* Lógica de vencimiento */
-        let vencTexto = p.vencimiento || "—";
-        let vencClase = "";
-        if (p.vencimiento && p.vencimiento !== "—") {
-            let partes = p.vencimiento.split("/");
-            let fechaVenc = new Date(partes[2], partes[1]-1, partes[0]);
-            let hoy = new Date();
-            let diasRestantes = Math.ceil((fechaVenc - hoy) / (1000 * 60 * 60 * 24));
-            if (diasRestantes < 0)        { vencClase = "text-danger fw-bold"; vencTexto += " 🚫"; }
-            else if (diasRestantes <= 30) { vencClase = "stock-bajo";          vencTexto += " ⚠️"; }
+    visibles.forEach(function(p, i) {
+        let estadoTexto = "";
+        let claseStock = "stock-ok";
+        let iconStock = "";
+        if (p.stock === 0) {
+            claseStock = "text-danger fw-bold";
+            iconStock = "🚫";
+            estadoTexto =
+                "<small class='text-secondary ms-1'>(sin stock)</small>";
         }
-
+        else if (p.stock <= (p.stockMinimo || 5)) {
+            claseStock = "stock-bajo";
+            iconStock = "⚠️";
+            estadoTexto =
+                "<small class='text-warning ms-1'>(stock bajo)</small>";
+        }
+        let fechaR = p.fechaReabastecimiento || "—";
+        let unidad = p.unidad || "unid.";
+        let marca  = p.marca || "—";
         tbody.innerHTML += `
         <tr>
             <td>${p.codigo}</td>
-            <td>${p.nombre}</td>
-            <td><small>${marca}</small></td>
-            <td>S/${p.precio.toFixed(2)}</td>
-            <td class="${claseStock}">${p.stock} ${iconStock}</td>
-            <td><span class="badge-pago">${unidad}</span></td>
-            <td class="${vencClase}"><small>${vencTexto}</small></td>
-            <td><small>${fechaR}</small></td>
             <td>
-                <button class="btn btn-sm btn-outline-warning me-1"
-                        onclick="abrirModalEditar(${i})"
-                        aria-label="Editar producto ${p.nombre}">
-                        Editar
+                ${p.nombre}
+                ${estadoTexto}
+            </td>
+            <td>
+                <small>${marca}</small>
+            </td>
+            <td>
+                S/${p.precio.toFixed(2)}
+            </td>
+            <td class="${claseStock}">
+                ${p.stock} ${iconStock}
+            </td>
+            <td>
+                <span class="badge-pago">${unidad}</span>
+            </td>
+            <td>
+                <small>${p.vencimiento || "—"}</small>
+            </td>
+            <td>
+                <small>${fechaR}</small>
+            </td>
+            <td>
+                <button
+                    class="btn btn-sm btn-outline-warning me-1"
+                    onclick="abrirModalEditar(${i})">
+                    Editar
                 </button>
-                <button class="btn btn-sm btn-danger"
-                        onclick="eliminarProducto(${i})"
-                        aria-label="Eliminar producto ${p.nombre}">
+                <button
+                    class="btn btn-sm btn-danger"
+                    onclick="eliminarProducto(${i})">
                     🗑
                 </button>
             </td>
         </tr>`;
     });
 }
+
+          
 function abrirModalEditar(index) {
     let p = productos[index];
     document.getElementById("editCodigo").value          = p.codigo;
@@ -234,7 +265,7 @@ async function eliminarProducto(index) {
             mostrarToast(" Error al eliminar.");
             return;
         }
-        productos.splice(index, 1);
+        productos[index].activo = false;
         mostrarProductos();
         mostrarToast(" Producto \"" + p.nombre + "\" eliminado.");
     } catch (e) {
@@ -243,7 +274,7 @@ async function eliminarProducto(index) {
     }
 }
 function limpiarFormulario() {
-    ["nombre","precio","stock","marca","vencimiento"].forEach(function(id) {
+    ["nombre","precio","stock","marca","vencimiento","stockMinimo"].forEach(function(id) {
         let el = document.getElementById(id);
         el.value = "";
         el.classList.remove("is-invalid","is-valid");
