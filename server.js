@@ -29,10 +29,7 @@ app.get("/pagina/ventas", (req, res) => {
 });
 
 /* Base de datos */
-const DATOS_INICIALES = {
-    productos: [],
-    ventas: []
-};
+const DATOS_INICIALES = { productos: [], ventas: [] };
 
 async function leerDatos() {
     try {
@@ -50,7 +47,8 @@ async function leerDatos() {
 async function guardarDatos(datos) {
     await fs.writeFile(RUTA_BD, JSON.stringify(datos, null, 2), "utf8");
 }
-/* GET productos */
+
+/* API PRODUCTOS */
 app.get("/api/productos", async (req, res) => {
     try {
         let datos = await leerDatos();
@@ -60,412 +58,98 @@ app.get("/api/productos", async (req, res) => {
     }
 });
 
-app.get("/productos-api", async (req, res) => {
-    try {
-        let datos = await leerDatos();
-        res.json(datos.productos);
-    } catch (e) {
-        res.status(500).json({ error: "Error al leer productos" });
-    }
-});
-
-/* POST productos */
 app.post("/api/productos", async (req, res) => {
     try {
-
-        let {
-            codigo,
-            nombre,
-            marca,
-            precio,
-            stock,
-            unidad,
-            vencimiento,
-            fechaReabastecimiento,
-            stockMinimo
-        } = req.body;
-
+        let { codigo, nombre, marca, precio, stock, unidad, vencimiento, fechaReabastecimiento, stockMinimo } = req.body;
         if (!codigo || !nombre || precio == null || stock == null) {
-            return res.status(400).json({
-                error: "Datos incompletos"
-            });
+            return res.status(400).json({ error: "Datos incompletos" });
         }
-
-        if (precio <= 0) {
-            return res.status(400).json({
-                error: "Precio inválido"
-            });
-        }
-
-        if (stock < 0) {
-            return res.status(400).json({
-                error: "Stock inválido"
-            });
-        }
-
         let datos = await leerDatos();
-
         if (datos.productos.find(p => p.codigo === codigo)) {
-            return res.status(409).json({
-                error: "Código ya existe"
-            });
+            return res.status(409).json({ error: "Código ya existe" });
         }
-
         datos.productos.push({
-            codigo,
-            nombre,
-            marca: marca || "—",
-            precio,
-            stock,
-            unidad: unidad || "unid.",
-            vencimiento: vencimiento || "—",
+            codigo, nombre, marca: marca || "—", precio, stock,
+            unidad: unidad || "unid.", vencimiento: vencimiento || "—",
             fechaReabastecimiento: fechaReabastecimiento || "—",
-
-            /* NUEVO */
-            stockMinimo: stockMinimo || 5,
-
-            /* NUEVO */
-            activo: true
+            stockMinimo: stockMinimo || 5, activo: true
         });
-
         await guardarDatos(datos);
-
-        res.status(201).json({
-            mensaje: "Producto guardado",
-            codigo
-        });
-
+        res.status(201).json({ mensaje: "Producto guardado", codigo });
     } catch (e) {
-        console.error("POST /productos:", e.message);
-
-        res.status(500).json({
-            error: "Error al guardar producto"
-        });
+        res.status(500).json({ error: "Error al guardar producto" });
     }
 });
 
-/* PUT producto */
 app.put("/api/productos/:codigo", async (req, res) => {
     try {
-
         let codigo = req.params.codigo;
-
-        let {
-            nombre,
-            marca,
-            precio,
-            stock,
-            unidad,
-            vencimiento,
-            fechaReabastecimiento,
-            stockMinimo
-        } = req.body;
-
-        if (!nombre || precio == null || stock == null) {
-            return res.status(400).json({
-                error: "Datos incompletos"
-            });
-        }
-
         let datos = await leerDatos();
+        let prod = datos.productos.find(p => p.codigo === codigo);
+        if (!prod) return res.status(404).json({ error: "No encontrado" });
 
-        let prod = datos.productos.find(
-            p => p.codigo === codigo
-        );
-
-        if (!prod) {
-            return res.status(404).json({
-                error: "Producto no encontrado"
-            });
-        }
-
-        prod.nombre = nombre;
-        prod.marca = marca || prod.marca || "—";
-        prod.precio = precio;
-        prod.stock = stock;
-        prod.unidad = unidad || prod.unidad || "unid.";
-        prod.vencimiento = vencimiento || prod.vencimiento || "—";
-
-        prod.fechaReabastecimiento =
-            fechaReabastecimiento ||
-            prod.fechaReabastecimiento ||
-            "—";
-
-        /* NUEVO */
-        prod.stockMinimo =
-            stockMinimo ||
-            prod.stockMinimo ||
-            5;
-
+        Object.assign(prod, req.body);
         await guardarDatos(datos);
-
-        res.json({
-            mensaje: "Producto actualizado",
-            codigo
-        });
-
+        res.json({ mensaje: "Actualizado" });
     } catch (e) {
-
-        console.error("PUT /productos/:codigo:", e.message);
-
-        res.status(500).json({
-            error: "Error al actualizar producto"
-        });
+        res.status(500).json({ error: "Error al actualizar" });
     }
 });
 
-/* PUT stock */
 app.put("/api/productos/:codigo/stock", async (req, res) => {
-
     try {
-
-        let codigo = req.params.codigo;
         let { stock } = req.body;
-
-        if (stock == null || stock < 0) {
-            return res.status(400).json({
-                error: "Stock inválido"
-            });
-        }
-
         let datos = await leerDatos();
-
-        let prod = datos.productos.find(
-            p => p.codigo === codigo
-        );
-
-        if (!prod) {
-            return res.status(404).json({
-                error: "Producto no encontrado"
-            });
+        let prod = datos.productos.find(p => p.codigo === req.params.codigo);
+        if (prod) {
+            prod.stock = stock;
+            await guardarDatos(datos);
+            res.json({ mensaje: "Stock actualizado" });
+        } else {
+            res.status(404).json({ error: "No encontrado" });
         }
-
-        prod.stock = stock;
-
-        await guardarDatos(datos);
-
-        res.json({
-            mensaje: "Stock actualizado",
-            codigo,
-            stock
-        });
-
-    } catch (e) {
-
-        console.error(
-            "PUT /productos/:codigo/stock:",
-            e.message
-        );
-
-        res.status(500).json({
-            error: "Error al actualizar stock"
-        });
-    }
+    } catch (e) { res.status(500).json({ error: "Error stock" }); }
 });
 
-/* DELETE lógico */
 app.delete("/api/productos/:codigo", async (req, res) => {
-
     try {
-
-        let codigo = req.params.codigo;
-
         let datos = await leerDatos();
-
-        let producto = datos.productos.find(
-            p => p.codigo === codigo
-        );
-
-        if (!producto) {
-            return res.status(404).json({
-                error: "Producto no encontrado"
-            });
+        let prod = datos.productos.find(p => p.codigo === req.params.codigo);
+        if (prod) {
+            prod.activo = false;
+            await guardarDatos(datos);
+            res.json({ mensaje: "Desactivado" });
         }
-
-        /* ELIMINACIÓN LÓGICA */
-        producto.activo = false;
-
-        await guardarDatos(datos);
-
-        res.json({
-            mensaje: "Producto desactivado",
-            codigo
-        });
-
-    } catch (e) {
-
-        console.error(
-            "DELETE /productos/:codigo:",
-            e.message
-        );
-
-        res.status(500).json({
-            error: "Error al eliminar producto"
-        });
-    }
+    } catch (e) { res.status(500).json({ error: "Error eliminar" }); }
 });
 
-app.get("/api/alertas", async (req, res) => {
-
-    try {
-
-        let datos = await leerDatos();
-
-        let stockBajo = datos.productos.filter(p =>
-            p.activo !== false &&
-            p.stock > 0 &&
-            p.stock <= (p.stockMinimo || 5)
-        );
-
-        let quiebreStock = datos.productos.filter(p =>
-            p.activo !== false &&
-            p.stock === 0
-        );
-
-        res.json({
-            stockBajo,
-            quiebreStock
-        });
-
-    } catch (e) {
-
-        console.error(e);
-
-        res.status(500).json({
-            error: "Error al generar alertas"
-        });
-    }
-});
-/* GET ventas */
+/* API VENTAS */
 app.get("/api/ventas", async (req, res) => {
-
     try {
-
         let datos = await leerDatos();
-
         res.json(datos.ventas);
-
-    } catch (e) {
-
-        res.status(500).json({
-            error: "Error al leer ventas"
-        });
-    }
+    } catch (e) { res.status(500).json({ error: "Error ventas" }); }
 });
 
-/* POST ventas */
 app.post("/api/ventas", async (req, res) => {
-
     try {
-
-        let {
-            codigo,
-            fecha,
-            total,
-            pago,
-            detalle
-        } = req.body;
-
-        if (!codigo || !fecha || total == null || !pago) {
-
-            return res.status(400).json({
-                error: "Datos de venta incompletos"
-            });
-        }
-
+        let { codigo, fecha, total, pago, detalle } = req.body;
         let datos = await leerDatos();
-
-        if (datos.ventas.find(v => v.codigo === codigo)) {
-
-            return res.status(409).json({
-                error: "Código de venta ya existe"
-            });
-        }
-
-        /* GUARDAR NOMBRE DEL PRODUCTO */
-        let detalleCompleto = (detalle || []).map(item => ({
-            codigo: item.codigo,
-            nombreProducto: item.nombreProducto,
-            cantidad: item.cantidad,
-            precio: item.precio,
-            subtotal: item.subtotal
-        }));
-
-        datos.ventas.push({
-            codigo,
-            fecha,
-            total,
-            pago,
-            detalle: detalleCompleto
-        });
-
+        datos.ventas.push({ codigo, fecha, total, pago, detalle });
         await guardarDatos(datos);
-
-        res.status(201).json({
-            mensaje: "Venta guardada",
-            codigo
-        });
-
-    } catch (e) {
-
-        console.error("POST /ventas:", e.message);
-
-        res.status(500).json({
-            error: "Error al guardar venta"
-        });
-    }
+        res.status(201).json({ mensaje: "Venta guardada" });
+    } catch (e) { res.status(500).json({ error: "Error al registrar venta" }); }
 });
 
-/* DELETE ventas */
 app.delete("/api/ventas/:codigo", async (req, res) => {
-
     try {
-
-        let codigo = req.params.codigo;
-
         let datos = await leerDatos();
-
-        let antes = datos.ventas.length;
-
-        datos.ventas = datos.ventas.filter(
-            v => v.codigo !== codigo
-        );
-
-        if (datos.ventas.length === antes) {
-
-            return res.status(404).json({
-                error: "Venta no encontrada"
-            });
-        }
-
+        datos.ventas = datos.ventas.filter(v => v.codigo !== req.params.codigo);
         await guardarDatos(datos);
-
-        res.json({
-            mensaje: "Venta eliminada",
-            codigo
-        });
-
-    } catch (e) {
-
-        console.error(
-            "DELETE /ventas/:codigo:",
-            e.message
-        );
-
-        res.status(500).json({
-            error: "Error al eliminar venta"
-        });
-    }
+        res.json({ mensaje: "Venta eliminada" });
+    } catch (e) { res.status(500).json({ error: "Error al eliminar" }); }
 });
 
-
-async function iniciar() {
-
-    await leerDatos();
-
-    app.listen(PORT, () => {
-        console.log(`Servidor corriendo en puerto ${PORT}`);
-    });
-}
-
-iniciar();
+app.listen(PORT, () => {
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+});
