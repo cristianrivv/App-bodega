@@ -34,7 +34,8 @@ async function registrarProducto() {
     let precio     = parseFloat(document.getElementById("precio").value);
     let stock      = parseInt(document.getElementById("stock").value);
     let stock      = parseInt(document.getElementById("stock").value);
-    let stockMinimo = parseInt(document.getElementById("stockMinimo").value) || 5;
+    let stockMinimo =
+    parseInt(document.getElementById("stockMinimo")?.value) || 5;
     let unidad     = document.getElementById("unidad").value;
     let marca      = document.getElementById("marca").value.trim();
     let vencInput  = document.getElementById("vencimiento").value;
