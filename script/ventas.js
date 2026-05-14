@@ -16,16 +16,40 @@ function mostrarToast(msg) {
 function actualizarSelect() {
     let sel = document.getElementById("productoVenta");
     sel.innerHTML = "";
-    if (productos.length === 0) {
-        sel.innerHTML = "<option disabled>No hay productos registrados</option>";
+    let activos = productos.filter(
+        p => p.activo !== false
+    );
+    if (activos.length === 0) {
+        sel.innerHTML =
+            "<option disabled>No hay productos registrados</option>";
         return;
     }
-    productos.forEach(function(p, i) {
+    activos.forEach(function(p) {
         let opt = document.createElement("option");
-        opt.value = i;
+        opt.value = productos.indexOf(p);
         let unid = p.unidad || "unid.";
-        opt.textContent = p.nombre + " — S/" + p.precio.toFixed(2) + " (Stock: " + p.stock + " " + unid + ")";
-        if (p.stock === 0) { opt.disabled = true; opt.textContent += " [sin stock]"; }
+        opt.textContent =
+            p.nombre +
+            " — S/" +
+            p.precio.toFixed(2) +
+            " (Stock: " +
+            p.stock +
+            " " +
+            unid +
+            ")";
+        /* QUIEBRE */
+        if (p.stock === 0) {
+            opt.disabled = true;
+            opt.textContent +=
+                " (sin stock)";
+        }
+        /* STOCK BAJO */
+        else if (
+            p.stock <= (p.stockMinimo || 5)
+        ) {
+            opt.textContent +=
+                " ⚠️";
+        }
         sel.appendChild(opt);
     });
 }
@@ -61,9 +85,9 @@ function agregarAlCarrito() {
         }
         existente.cantidad += cantidad;
     } else {
-        carrito.push({ codigo: prod.codigo, nombre: prod.nombre,
-        precio: prod.precio, cantidad,
-        unidad: prod.unidad || "unid." });
+       carrito.push({codigo: prod.codigo,nombre: prod.nombre,nombreProducto: prod.nombre,precio: prod.precio,cantidad,unidad: prod.unidad || "unid.",
+        subtotal: prod.precio * cantidad
+    });
     }
     cantInput.value = "";
     renderCarrito();
@@ -164,7 +188,26 @@ async function registrarVenta() {
         actualizarSelect();
         mostrarVentas(ventas);
         mostrarToast(" Venta " + codigo + " registrada — S/" + total.toFixed(2));
-
+        /* ALERTAS */
+        let productosBajo = productos.filter(p =>
+            p.stock > 0 &&
+            p.stock <= (p.stockMinimo || 5)
+        );
+        let quiebre = productos.filter(
+            p => p.stock === 0
+        );
+        if (productosBajo.length > 0) {
+            console.log(
+                "STOCK BAJO:",
+                productosBajo
+            );
+        }
+        if (quiebre.length > 0) {
+            console.log(
+                "QUIEBRE DE STOCK:",
+                quiebre
+            );
+        }
     } catch (e) {
         mostrarToast(" No se pudo conectar con el servidor.");
         console.error(e);
@@ -218,7 +261,9 @@ function verDetalleVenta(index) {
     let filas = (v.detalle || []).map(function(item) {
         let sub = item.precio * item.cantidad;
         return `<tr>
-            <td>${item.nombre}</td>
+            <td>${item.nombreProducto || item.nombre}
+            ${item.stock === 0? "<small class='text-secondary ms-1'>(sin stock)</small>": ""
+            }</td>
             <td>${item.cantidad}</td>
             <td>S/${item.precio.toFixed(2)}</td>
             <td><strong>S/${sub.toFixed(2)}</strong></td>
