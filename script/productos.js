@@ -172,6 +172,7 @@ function abrirModalEditar(index) {
     document.getElementById("editStockNuevo").value      = p.stock;
     document.getElementById("editStockActual").textContent = p.stock;
     document.getElementById("editUnidadActual").textContent = " " + (p.unidad || "unid.");
+    document.getElementById("editStockMinimo").value = p.stockMinimo || 5;
     let selUnidad = document.getElementById("editUnidad");
     selUnidad.value = p.unidad || "unid.";
 
@@ -207,6 +208,7 @@ async function guardarEdicion() {
     let precio  = parseFloat(precioInput.value);
     let stock   = parseInt(stockInput.value);
     let unidad  = document.getElementById("editUnidad").value;
+    let stockMinimo =parseInt(document.getElementById("editStockMinimo").value) || 5;
     let marca   = document.getElementById("editMarca").value.trim() || "—";
     let vencInput = document.getElementById("editVencimiento").value;
     let vencimiento = "—";
@@ -230,8 +232,7 @@ async function guardarEdicion() {
         let partes = fechaInput.value.split("-");
         fechaFormateada = partes[2] + "/" + partes[1] + "/" + partes[0];
     }
-    let datosActualizados = { codigo, nombre, marca, precio, stock, unidad,
-        vencimiento, fechaReabastecimiento: fechaFormateada };
+    let datosActualizados = {codigo,nombre,marca,precio,stock,unidad,vencimiento,fechaReabastecimiento: fechaFormateada,stockMinimo,activo: true};
     try {
         let res = await fetch("/api/productos/" + codigo, {
             method: "PUT",
