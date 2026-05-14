@@ -9,15 +9,13 @@ function fechaHoy() {
 function actualizarDashboard() {
     let hoy = fechaHoy();
     let totalHoy = ventas.filter(v => v.fecha === hoy).reduce((s, v) => s + v.total, 0);
-    
     document.getElementById("ventasHoy").textContent = "S/" + totalHoy.toFixed(2);
 
-    // LÓGICA DE ALERTAS SOLICITADA POR EL PROFE
+    // LÓGICA DE ALERTAS: Quiebre (0) y Stock Bajo (<= Mínimo)
     let bajo = productos.filter(p => p.activo && p.stock > 0 && p.stock <= p.stockMinimo).length;
     let quiebre = productos.filter(p => p.activo && p.stock <= 0).length;
     
-    // Mostramos ambos en la tarjeta de Stock Bajo
-    document.getElementById("stockBajo").innerHTML = `${bajo} <small style="font-size:12px; display:block; color: #ff6b6b;">(${quiebre} en quiebre)</small>`;
+    document.getElementById("stockBajo").innerHTML = `${bajo} <small style="font-size:12px; display:block; color:#ff6b6b">(${quiebre} en quiebre)</small>`;
 
     let tabla = document.getElementById("tablaUltimasVentas");
     tabla.innerHTML = "";
@@ -42,17 +40,20 @@ function abrirModal(tipo) {
             </div>
             <h6 class="text-warning fw-bold">⚠️ STOCK BAJO (Límite personalizado)</h6>
             <div class="list-group">
-                ${bajo.length ? bajo.map(p => `<div class="list-group-item bg-dark text-white border-warning d-flex justify-content-between"><span>${p.nombre} <small class="text-secondary">(Mín: ${p.stockMinimo})</small></span><span class="badge bg-warning text-dark">${p.stock} ${p.unidad}</span></div>`).join('') : '<p class="text-secondary small">No hay productos por debajo del mínimo.</p>'}
-            </div>
-        `;
+                ${bajo.length ? bajo.map(p => `<div class="list-group-item bg-dark text-white border-warning d-flex justify-content-between"><span>${p.nombre} <small class="text-secondary">(Mín: ${p.stockMinimo})</small></span><span class="badge bg-warning text-dark">${p.stock} ${p.unidad}</span></div>`).join('') : '<p class="text-secondary small">No hay productos bajo el mínimo.</p>'}
+            </div>`;
+    } else {
+        cuerpo.innerHTML = "<p>Cargando información...</p>";
     }
     new bootstrap.Modal(document.getElementById("modalDetalle")).show();
 }
 
 async function iniciar() {
-    let [r1, r2] = await Promise.all([fetch("/api/productos"), fetch("/api/ventas")]);
-    productos = await r1.json();
-    ventas = await r2.json();
-    actualizarDashboard();
+    try {
+        let [r1, r2] = await Promise.all([fetch("/api/productos"), fetch("/api/ventas")]);
+        productos = await r1.json();
+        ventas = await r2.json();
+        actualizarDashboard();
+    } catch (e) { console.error(e); }
 }
 iniciar();
