@@ -2,13 +2,66 @@ let productos  = [];
 let contador   = 1;
 let modalEditar = null;
 
-function mostrarToast(msg) {
-    let el = document.getElementById("toastNotif");
-    let m  = document.getElementById("toastMensaje");
-    if (!el || !m) return;
-    m.textContent = msg;
-    bootstrap.Toast.getOrCreateInstance(el, { delay: 3500 }).show();
+function mostrarToast(msg, tipo = "info") {
+    let background = "var(--bg-surface-alt)"; // default
+    let icon = "info";
+    let color = "#fff";
+    
+    if (tipo === "danger") {
+        background = "linear-gradient(to right, #E05252, #c94040)";
+        icon = "warning-circle";
+    } else if (tipo === "warning") {
+        background = "linear-gradient(to right, #E89C2F, #d4871e)";
+        icon = "warning";
+    } else if (tipo === "success") {
+        background = "linear-gradient(to right, #4CAF7D, #3d9669)";
+        icon = "check-circle";
+    }
+
+    Toastify({
+        text: `<i class="ph-bold ph-${icon}" style="font-size: 18px;"></i> <span style="font-weight: 500;">${msg}</span>`,
+        duration: 3500,
+        close: true,
+        gravity: "top", // top or bottom
+        position: "right", // left, center or right
+        escapeMarkup: false,
+        style: {
+            background: background,
+            color: color,
+            borderRadius: "10px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            padding: "12px 18px",
+            fontFamily: "'Inter', sans-serif"
+        }
+    }).showToast();
 }
+
+/* ── Sidebar Toggle ─────────────────────────────────── */
+document.addEventListener("DOMContentLoaded", () => {
+    const btn     = document.getElementById("btn-toggle-sidebar");
+    const sidebar = document.querySelector(".sidebar");
+    const html    = document.documentElement;
+
+    if (!btn || !sidebar) return;
+
+    if (html.classList.contains("sidebar-pre-collapse")) {
+        sidebar.classList.add("collapsed");
+    }
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            html.classList.remove("sidebar-pre-collapse");
+        });
+    });
+
+    btn.addEventListener("click", () => {
+        sidebar.classList.toggle("collapsed");
+        localStorage.setItem("sidebarCollapsed", sidebar.classList.contains("collapsed"));
+    });
+});
 
 /*Valida campos del formulario de registro */
 function validarRegistro() {
@@ -65,16 +118,16 @@ async function registrarProducto() {
         });
         if (!res.ok) {
             let err = await res.json();
-            mostrarToast("Error: " + (err.error || "Error al guardar"));
+            mostrarToast("Error: " + (err.error || "Error al guardar"), "danger");
             return;
         }
         productos.push(nuevo);
         contador++;
         mostrarProductos();
         limpiarFormulario();
-        mostrarToast(" Producto \"" + nombre + "\" registrado.");
+        mostrarToast("Producto \"" + nombre + "\" registrado.", "success");
     } catch (e) {
-        mostrarToast("Error: No se pudo conectar con el servidor.");
+        mostrarToast("Error: No se pudo conectar con el servidor.", "danger");
         console.error(e);
     }
 }
@@ -96,7 +149,7 @@ function mostrarProductos() {
             ? "stock-critico"
             : p.stock <= limite ? "stock-bajo" : "stock-ok";
 
-        let iconStock = p.stock === 0 ? "🚫" : p.stock <= limite ? "⚠️" : "";
+        let iconStock = p.stock === 0 ? "<i class='ph-bold ph-prohibit text-danger'></i>" : p.stock <= limite ? "<i class='ph-bold ph-warning text-warning'></i>" : "";
         let fechaR    = p.fechaReabastecimiento || "—";
         let unidad    = p.unidad || "unid.";
         let marca     = p.marca || "—";
@@ -109,8 +162,8 @@ function mostrarProductos() {
             let fechaVenc = new Date(partes[2], partes[1]-1, partes[0]);
             let hoy = new Date();
             let diasRestantes = Math.ceil((fechaVenc - hoy) / (1000 * 60 * 60 * 24));
-            if (diasRestantes < 0)        { vencClase = "text-danger fw-bold"; vencTexto += " 🚫"; }
-            else if (diasRestantes <= 30) { vencClase = "stock-bajo";          vencTexto += " ⚠️"; }
+            if (diasRestantes < 0)        { vencClase = "text-danger fw-bold"; vencTexto += " <i class='ph-bold ph-prohibit'></i>"; }
+            else if (diasRestantes <= 30) { vencClase = "stock-bajo";          vencTexto += " <i class='ph-bold ph-warning'></i>"; }
         }
 
         tbody.innerHTML += `
@@ -133,7 +186,7 @@ function mostrarProductos() {
                 <button class="btn btn-sm btn-danger"
                         onclick="eliminarProducto(${i})"
                         aria-label="Eliminar producto ${p.nombre}">
-                    🗑
+                    <i class="ph-bold ph-trash"></i>
                 </button>
             </td>
         </tr>`;
@@ -221,7 +274,7 @@ async function guardarEdicion() {
         });
         if (!res.ok) {
             let err = await res.json();
-            mostrarToast("Error al actualizar: " + (err.error || "Error desconocido"));
+            mostrarToast("Error al actualizar: " + (err.error || "Error desconocido"), "danger");
             return;
         }
 
@@ -230,7 +283,7 @@ async function guardarEdicion() {
 
         mostrarProductos();
         if (modalEditar) modalEditar.hide();
-        mostrarToast(" Producto \"" + nombre + "\" actualizado. Reabastecimiento: " + fechaFormateada);
+        mostrarToast("Producto \"" + nombre + "\" actualizado.", "success");
     } catch (e) {
         mostrarToast(" No se pudo conectar con el servidor.");
         console.error(e);
@@ -243,12 +296,12 @@ async function eliminarProducto(index) {
     try {
         let res = await fetch("/api/productos/" + p.codigo, { method: "DELETE" });
         if (!res.ok) {
-            mostrarToast(" Error al eliminar.");
+            mostrarToast("Error al eliminar.", "danger");
             return;
         }
         productos.splice(index, 1);
         mostrarProductos();
-        mostrarToast(" Producto \"" + p.nombre + "\" eliminado.");
+        mostrarToast("Producto \"" + p.nombre + "\" eliminado.", "success");
     } catch (e) {
         mostrarToast(" No se pudo conectar con el servidor.");
         console.error(e);

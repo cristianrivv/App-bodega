@@ -8,7 +8,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="/css/estilos.css">
+    <!-- Aplicar estado del sidebar ANTES del render para evitar parpadeo -->
+    <script>if(localStorage.getItem('sidebarCollapsed')==='true')document.documentElement.classList.add('sidebar-pre-collapse');</script>
 </head>
 <body>
 <div class="contenedor">
@@ -17,10 +21,10 @@
     <aside class="sidebar" role="navigation" aria-label="Menú principal">
         <div class="sidebar-brand">
             <div class="sidebar-logo">
-                <div class="sidebar-logo-icon">🏪</div>
+                <div class="sidebar-logo-icon"><i class="ph-fill ph-storefront"></i></div>
                 <div class="sidebar-logo-text">
                     Bodega Doña Carmen
-                    <span>Sistema ERP</span>
+                    <span>Bodega</span>
                 </div>
             </div>
         </div>
@@ -30,15 +34,15 @@
             <ul role="menubar">
                 <li class="activo" role="menuitem" tabindex="0"
                     onclick="window.location.href='/'" aria-current="page">
-                    <span class="nav-icon">🏠</span> Inicio
+                    <span class="nav-icon"><i class="ph ph-house"></i></span> <span class="nav-text">Inicio</span>
                 </li>
                 <li role="menuitem" tabindex="0"
                     onclick="window.location.href='/pagina/productos'">
-                    <span class="nav-icon">📦</span> Productos
+                    <span class="nav-icon"><i class="ph ph-package"></i></span> <span class="nav-text">Productos</span>
                 </li>
                 <li role="menuitem" tabindex="0"
                     onclick="window.location.href='/pagina/ventas'">
-                    <span class="nav-icon">🛒</span> Ventas
+                    <span class="nav-icon"><i class="ph ph-shopping-cart"></i></span> <span class="nav-text">Ventas</span>
                 </li>
             </ul>
         </nav>
@@ -54,10 +58,15 @@
         <!-- Topbar -->
         <section class="topbar">
             <div class="topbar-left">
-                <div class="topbar-breadcrumb">
-                    <span>ERP</span>
-                    <span class="sep">›</span>
-                    <span class="current">Dashboard</span>
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <button id="btn-toggle-sidebar" class="btn-sidebar-toggle" aria-label="Alternar menú">
+                        <i class="ph ph-list"></i>
+                    </button>
+                    <div class="topbar-breadcrumb mb-0">
+                        <span>ERP</span>
+                        <span class="sep">›</span>
+                        <span class="current">Dashboard</span>
+                    </div>
                 </div>
                 <h1>Panel Principal</h1>
                 <p>Resumen del negocio — haz clic en cada tarjeta para ver el detalle</p>
@@ -71,7 +80,7 @@
                     onclick="abrirModal('hoy')"
                     aria-label="Ver detalle de ventas de hoy"
                     id="card-ventas-hoy">
-                    <div class="card-dash-icon">💰</div>
+                    <div class="card-dash-icon"><i class="ph-fill ph-currency-circle-dollar"></i></div>
                     <h3 id="ventasHoy">S/0.00</h3>
                     <p>Ventas Hoy</p>
                     <small>Ver detalle</small>
@@ -82,7 +91,7 @@
                     onclick="abrirModal('mes')"
                     aria-label="Ver detalle de ganancias del mes"
                     id="card-ganancia-mes">
-                    <div class="card-dash-icon">📈</div>
+                    <div class="card-dash-icon"><i class="ph-fill ph-chart-line-up"></i></div>
                     <h3 id="gananciaMes">S/0.00</h3>
                     <p>Ganancia Mensual</p>
                     <small>Ver detalle</small>
@@ -93,7 +102,7 @@
                     onclick="abrirModal('top')"
                     aria-label="Ver top de productos más vendidos"
                     id="card-top-vendidos">
-                    <div class="card-dash-icon">🏆</div>
+                    <div class="card-dash-icon"><i class="ph-fill ph-trophy"></i></div>
                     <h3 id="masVendido" style="font-size:17px; line-height:1.3;">—</h3>
                     <p>Top Más Vendido</p>
                     <small>Ver ranking</small>
@@ -104,7 +113,7 @@
                     onclick="abrirModal('stock')"
                     aria-label="Ver productos con stock bajo"
                     id="card-stock-bajo">
-                    <div class="card-dash-icon">⚠️</div>
+                    <div class="card-dash-icon" style="color: var(--danger);"><i class="ph-fill ph-warning-circle"></i></div>
                     <h3 id="stockBajo">0</h3>
                     <p>Stock Bajo</p>
                     <small>Ver cuáles</small>
@@ -119,22 +128,22 @@
                 <div class="panel mb-4">
                     <div class="panel-header">
                         <div class="panel-title">
-                            <div class="panel-title-icon">⚡</div>
+                            <div class="panel-title-icon"><i class="ph-fill ph-lightning"></i></div>
                             <h2>Accesos rápidos</h2>
                         </div>
                     </div>
                     <div class="accesos-grid">
-                        <button class="btn btn-warning fw-bold"
+                        <button class="btn btn-warning fw-bold btn-premium"
                                 id="btn-registrar-producto"
                                 onclick="window.location.href='/pagina/productos'"
                                 aria-label="Ir a registrar productos">
-                            + Registrar Producto
+                            <i class="ph-bold ph-plus"></i> Registrar Producto
                         </button>
-                        <button class="btn btn-outline-warning"
+                        <button class="btn btn-outline-warning btn-premium"
                                 id="btn-nueva-venta"
                                 onclick="window.location.href='/pagina/ventas'"
                                 aria-label="Ir a registrar ventas">
-                            + Nueva Venta
+                            <i class="ph-bold ph-shopping-cart"></i> Nueva Venta
                         </button>
                     </div>
                 </div>
@@ -143,7 +152,7 @@
                 <div class="panel mb-0">
                     <div class="panel-header">
                         <div class="panel-title">
-                            <div class="panel-title-icon">🧾</div>
+                            <div class="panel-title-icon"><i class="ph-fill ph-receipt"></i></div>
                             <h2>Últimas ventas</h2>
                         </div>
                     </div>
@@ -162,7 +171,7 @@
                         </table>
                     </div>
                     <div id="sinVentas" class="empty-state">
-                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-icon"><i class="ph ph-clipboard-text"></i></div>
                         No hay ventas registradas aún.
                     </div>
                 </div>
@@ -173,7 +182,7 @@
                 <div class="panel h-100 mb-0">
                     <div class="panel-header">
                         <div class="panel-title">
-                            <div class="panel-title-icon" style="color: var(--danger);">🔔</div>
+                            <div class="panel-title-icon" style="color: var(--danger);"><i class="ph-fill ph-bell"></i></div>
                             <h2>Alertas de Inventario</h2>
                         </div>
                         <span id="contadorAlertas" class="badge-pago" style="background:var(--danger-muted);color:var(--danger);border-color:rgba(224,82,82,0.3);">0 alertas</span>
@@ -182,7 +191,7 @@
                         <!-- Alertas se renderizan aquí -->
                     </div>
                     <div id="sinAlertas" class="empty-state">
-                        <div class="empty-state-icon">✅</div>
+                        <div class="empty-state-icon"><i class="ph ph-check-circle"></i></div>
                         Inventario en niveles óptimos.<br>No hay alertas.
                     </div>
                 </div>
@@ -211,19 +220,8 @@
     </div>
 </div>
 
-<!-- ── TOAST ──────────────────────────────────────────────── -->
-<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:9999">
-    <div id="toastNotif" class="toast align-items-center text-bg-warning border-0"
-        role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-            <div class="toast-body fw-bold" id="toastMensaje"></div>
-            <button type="button" class="btn-close btn-close-dark me-2 m-auto"
-                    data-bs-dismiss="toast" aria-label="Cerrar"></button>
-        </div>
-    </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script src="/script/inicio.js"></script>
 </body>
 </html>

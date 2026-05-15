@@ -52,7 +52,9 @@
     --radius-xl:  20px;
 
     /* Sidebar */
-    --sidebar-w:  240px;
+    --sidebar-w:        240px;   /* ancho expandido   */
+    --sidebar-collapsed: 68px;  /* ancho colapsado   */
+    --sidebar-transition: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 
     /* Transiciones */
     --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -81,6 +83,37 @@ body {
     min-height: 100vh;
 }
 
+/* ── Pre-collapse (evita parpadeo al cargar la página) ─────── */
+/* Aplica el estado colapsado ANTES de que el DOM se pinte      */
+html.sidebar-pre-collapse .sidebar {
+    width: 80px;
+    transition: none !important; /* sin animación durante la carga */
+}
+html.sidebar-pre-collapse .sidebar .sidebar-logo-text,
+html.sidebar-pre-collapse .sidebar .sidebar-section-label,
+html.sidebar-pre-collapse .sidebar .nav-text,
+html.sidebar-pre-collapse .sidebar .sidebar-footer {
+    display: none;
+}
+html.sidebar-pre-collapse .sidebar .sidebar-brand {
+    padding: 28px 10px 20px;
+    justify-content: center;
+}
+html.sidebar-pre-collapse .sidebar .sidebar-logo {
+    justify-content: center;
+    margin: 0;
+}
+html.sidebar-pre-collapse .sidebar .sidebar-nav {
+    padding: 16px 8px;
+}
+html.sidebar-pre-collapse .sidebar li {
+    justify-content: center;
+    padding: 12px 0;
+}
+html.sidebar-pre-collapse .sidebar li .nav-icon {
+    font-size: 20px;
+}
+
 /* ── Sidebar ──────────────────────────────────────────────── */
 .sidebar {
     width: var(--sidebar-w);
@@ -93,7 +126,43 @@ body {
     top: 0;
     height: 100vh;
     overflow-y: auto;
+    overflow-x: hidden;
     z-index: 100;
+    transition: width var(--transition);
+}
+
+.sidebar.collapsed {
+    width: 80px;
+}
+
+.sidebar.collapsed .sidebar-logo-text,
+.sidebar.collapsed .sidebar-section-label,
+.sidebar.collapsed .nav-text,
+.sidebar.collapsed .sidebar-footer {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-brand {
+    padding: 28px 10px 20px;
+    justify-content: center;
+}
+
+.sidebar.collapsed .sidebar-logo {
+    justify-content: center;
+    margin: 0;
+}
+
+.sidebar.collapsed .sidebar-nav {
+    padding: 16px 8px;
+}
+
+.sidebar.collapsed li {
+    justify-content: center;
+    padding: 12px 0;
+}
+
+.sidebar.collapsed li .nav-icon {
+    font-size: 20px;
 }
 
 .sidebar-brand {
@@ -233,6 +302,27 @@ body {
     justify-content: space-between;
     gap: 16px;
     flex-wrap: wrap;
+}
+
+.btn-sidebar-toggle {
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.btn-sidebar-toggle:hover {
+    background: var(--bg-surface-alt);
+    color: var(--text-primary);
+    border-color: var(--border);
 }
 
 .topbar-left h1 {
@@ -431,6 +521,20 @@ body {
     border-radius: var(--radius-sm) !important;
     transition: all var(--transition) !important;
     letter-spacing: 0.01em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-premium {
+    padding: 10px 18px !important;
+    border-radius: var(--radius-md) !important;
+    font-weight: 600 !important;
+}
+
+.btn-premium i {
+    font-size: 16px;
 }
 
 .btn-warning,
@@ -618,6 +722,31 @@ body {
     font-weight: 500 !important;
     color: var(--text-primary) !important;
     padding: 12px 14px !important;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toast-body i {
+    font-size: 18px;
+}
+
+.toast-danger {
+    background: var(--danger-muted) !important;
+    border: 1px solid var(--danger) !important;
+    color: #fff !important;
+}
+
+.toast-warning {
+    background: rgba(232, 156, 47, 0.15) !important;
+    border: 1px solid var(--warning) !important;
+    color: #fff !important;
+}
+
+.toast-success {
+    background: var(--success-muted) !important;
+    border: 1px solid var(--success) !important;
+    color: #fff !important;
 }
 
 /* ── Badges ───────────────────────────────────────────────── */
@@ -703,16 +832,32 @@ body {
 .alert-icon {
     font-size: 20px;
 }
+.alert-details {
+    display: flex;
+    flex-direction: column;
+}
 .alert-details h4 {
     color: var(--text-primary);
-    font-size: 14px;
-    margin: 0;
+    font-size: 14.5px;
+    margin: 0 0 2px 0;
     font-weight: 600;
+    letter-spacing: -0.01em;
 }
-.alert-details p {
-    color: var(--text-muted);
-    font-size: 12px;
-    margin: 0;
+.alert-details p.alert-status {
+    font-size: 13px;
+    margin: 0 0 2px 0;
+    font-weight: 500;
+}
+.alert-details p.alert-status.status-critico {
+    color: var(--danger);
+}
+.alert-details p.alert-status.status-advertencia {
+    color: var(--warning);
+}
+.alert-details span.alert-meta {
+    color: var(--text-faint);
+    font-size: 11.5px;
+    font-weight: 400;
 }
 .alert-badge {
     padding: 4px 10px;
