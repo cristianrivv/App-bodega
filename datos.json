@@ -1,4 +1,31 @@
 {
-    "productos":[],
-    "ventas":[]
+  "productos": [
+    {
+      "codigo": "P001",
+      "nombre": "Arroz",
+      "marca": "FARAON",
+      "precio": 5.5,
+      "stock": 0,
+      "unidad": "kg",
+      "vencimiento": "—",
+      "fechaReabastecimiento": "30/01/2025"
+    }
+  ],
+  "ventas": [
+    {
+      "codigo": "V001",
+      "fecha": "14/05/2026",
+      "total": 110,
+      "pago": "Yape",
+      "detalle": [
+        {
+          "codigo": "P001",
+          "nombre": "Arroz",
+          "precio": 5.5,
+          "cantidad": 20,
+          "unidad": "kg"
+        }
+      ]
+    }
+  ]
 }

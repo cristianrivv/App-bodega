@@ -46,9 +46,60 @@ function actualizarDashboard() {
     let top = Object.entries(conteo).sort((a,b) => b[1]-a[1]);
     let txtTop = top.length > 0 ? top[0][0] : "Sin ventas";
     document.getElementById("masVendido").textContent = txtTop;
-    /* Stock bajo */
-    let bajo = productos.filter(p => p.stock <= 5).length;
+    /* Stock bajo dinámico */
+    let bajo = productos.filter(p => p.stock <= (p.stockMinimo != null ? p.stockMinimo : 5)).length;
     document.getElementById("stockBajo").textContent = bajo;
+
+    /* Renderizar Alertas Empresariales */
+    let panelAlertas = document.getElementById("panelAlertas");
+    let sinAlertas = document.getElementById("sinAlertas");
+    let contadorAlertas = document.getElementById("contadorAlertas");
+    
+    if(panelAlertas) {
+        panelAlertas.innerHTML = "";
+        let countAlertas = 0;
+        productos.forEach(p => {
+            let limite = p.stockMinimo != null ? p.stockMinimo : 5;
+            if (p.stock === 0) {
+                countAlertas++;
+                panelAlertas.innerHTML += `
+                <div class="alert-item alert-critico">
+                    <div class="alert-info">
+                        <span class="alert-icon">🚫</span>
+                        <div class="alert-details">
+                            <h4>${p.nombre}</h4>
+                            <p>Sin stock disponible (Mínimo: ${limite} ${p.unidad || 'unid.'})</p>
+                        </div>
+                    </div>
+                    <span class="alert-badge badge-critico">AGOTADO</span>
+                </div>`;
+            } else if (p.stock <= limite) {
+                countAlertas++;
+                panelAlertas.innerHTML += `
+                <div class="alert-item alert-advertencia">
+                    <div class="alert-info">
+                        <span class="alert-icon">⚠️</span>
+                        <div class="alert-details">
+                            <h4>${p.nombre}</h4>
+                            <p>Stock actual: ${p.stock} ${p.unidad || 'unid.'} (Mínimo: ${limite})</p>
+                        </div>
+                    </div>
+                    <span class="alert-badge badge-advertencia">STOCK BAJO</span>
+                </div>`;
+            }
+        });
+
+        if (countAlertas === 0) {
+            sinAlertas.classList.remove("d-none");
+            panelAlertas.classList.add("d-none");
+            contadorAlertas.textContent = "0 alertas";
+        } else {
+            sinAlertas.classList.add("d-none");
+            panelAlertas.classList.remove("d-none");
+            contadorAlertas.textContent = `${countAlertas} alerta${countAlertas>1?'s':''}`;
+        }
+    }
+
     /* Últimas 5 ventas */
     let tabla  = document.getElementById("tablaUltimasVentas");
     let sinMsg = document.getElementById("sinVentas");
@@ -183,13 +234,15 @@ function abrirModal(tipo) {
                 ${top.map(function([nombre, data], i) {
                     let prod = productos.find(p => p.nombre === nombre);
                     let stockActual = prod ? prod.stock : "—";
-                    let stockClase = prod && prod.stock <= 5 ? "stock-bajo" : "stock-ok";
+                    let limite = prod ? (prod.stockMinimo != null ? prod.stockMinimo : 5) : 0;
+                    let stockClase = prod && prod.stock === 0 ? "stock-critico" : (prod && prod.stock <= limite ? "stock-bajo" : "stock-ok");
+                    let iconStock = prod && prod.stock === 0 ? "🚫" : (prod && prod.stock <= limite ? "⚠️" : "");
                     let medalla = medallas[i] || (i+1) + "°";
                     return `<tr>
                         <td>${medalla}</td>
                         <td><strong>${nombre}</strong></td>
                         <td>${data.cantidad} uds.</td>
-                        <td class="${stockClase}">${stockActual} ${prod && prod.stock<=5 ? "Alerta" : ""}</td>
+                        <td class="${stockClase}">${stockActual} ${iconStock}</td>
                     </tr>`;
                 }).join("")}
                 </tbody>
@@ -199,14 +252,14 @@ function abrirModal(tipo) {
     }
 
     else if (tipo === "stock") {
-        titulo.textContent = " Productos con stock bajo";
-        let bajos = productos.filter(p => p.stock <= 5);
+        titulo.textContent = " Productos con alertas de stock";
+        let bajos = productos.filter(p => p.stock <= (p.stockMinimo != null ? p.stockMinimo : 5));
         if (bajos.length === 0) {
             cuerpo.innerHTML = "<p class='text-success text-center py-3'> Todos los productos tienen stock suficiente.</p>";
         } else {
             cuerpo.innerHTML = `
             <p class="text-warning mb-3">
-                ${bajos.length} producto(s) con 5 o menos unidades disponibles.
+                ${bajos.length} producto(s) en nivel de alerta.
             </p>
             <div class="table-responsive">
             <table class="table table-dark table-bordered table-sm">
@@ -215,10 +268,11 @@ function abrirModal(tipo) {
                 </thead>
                 <tbody>
                 ${bajos.map(function(p) {
-                    let claseStock = p.stock === 0 ? "text-danger fw-bold" : "stock-bajo";
+                    let limite = p.stockMinimo != null ? p.stockMinimo : 5;
+                    let claseStock = p.stock === 0 ? "stock-critico" : "stock-bajo";
                     return `<tr>
                         <td>${p.codigo}</td>
-                        <td>${p.nombre}</td>
+                        <td>${p.nombre} <small class="text-secondary">(Mín: ${limite})</small></td>
                         <td class="${claseStock}">${p.stock} ${p.stock===0?"🚫":"⚠️"}</td>
                         <td>S/${p.precio.toFixed(2)}</td>
                     </tr>`;
