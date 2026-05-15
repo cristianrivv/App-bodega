@@ -3,42 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Registro y gestión de ventas — ERP Bodega Doña Carmen.">
     <title>Ventas — Bodega Doña Carmen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="/css/estilos.css">
 </head>
 <body>
 <div class="contenedor">
+
+    <!-- ── SIDEBAR ──────────────────────────────────────── -->
     <aside class="sidebar" role="navigation" aria-label="Menú principal">
-        <h2>🛒 Bodega<br>Doña Carmen</h2>
-        <ul role="menubar">
-            <li role="menuitem" tabindex="0"
-                onclick="window.location.href='/'">
-                🏠 Inicio
-            </li>
-            <li role="menuitem" tabindex="0"
-                onclick="window.location.href='/pagina/productos'">
-                📦 Productos
-            </li>
-            <li class="activo" role="menuitem" tabindex="0"
-                aria-current="page">
-                🛒 Ventas
-            </li>
-        </ul>
+        <div class="sidebar-brand">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-icon">🏪</div>
+                <div class="sidebar-logo-text">
+                    Bodega Doña Carmen
+                    <span>Sistema ERP</span>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <p class="sidebar-section-label">Navegación</p>
+            <ul role="menubar">
+                <li role="menuitem" tabindex="0"
+                    onclick="window.location.href='/'">
+                    <span class="nav-icon">🏠</span> Inicio
+                </li>
+                <li role="menuitem" tabindex="0"
+                    onclick="window.location.href='/pagina/productos'">
+                    <span class="nav-icon">📦</span> Productos
+                </li>
+                <li class="activo" role="menuitem" tabindex="0"
+                    aria-current="page">
+                    <span class="nav-icon">🛒</span> Ventas
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            Bodega Doña Carmen &copy; 2025
+        </div>
     </aside>
 
-    <!-- PRINCIPAL -->
+    <!-- ── PRINCIPAL ─────────────────────────────────────── -->
     <main class="principal" role="main" aria-label="Gestión de ventas">
 
+        <!-- Topbar -->
         <section class="topbar">
-            <h1>🛒 Ventas</h1>
-            <p>Registra ventas y administra el historial</p>
+            <div class="topbar-left">
+                <div class="topbar-breadcrumb">
+                    <span>ERP</span>
+                    <span class="sep">›</span>
+                    <span class="current">Ventas</span>
+                </div>
+                <h1>Registro de Ventas</h1>
+                <p>Registra ventas y administra el historial de transacciones</p>
+            </div>
         </section>
 
-        <!-- FORMULARIO NUEVA VENTA -->
+        <!-- Formulario de nueva venta -->
         <div class="panel" aria-labelledby="titulo-venta">
-            <h2 id="titulo-venta">Registrar nueva venta</h2>
+            <div class="panel-header">
+                <div class="panel-title">
+                    <div class="panel-title-icon">🛒</div>
+                    <h2 id="titulo-venta">Registrar nueva venta</h2>
+                </div>
+            </div>
 
+            <!-- Selección de producto -->
             <div class="row g-3 mb-3">
                 <div class="col-12 col-md-5">
                     <label for="productoVenta" class="form-label">Producto</label>
@@ -57,61 +92,77 @@
                     <div class="invalid-feedback">Ingresa una cantidad válida.</div>
                 </div>
                 <div class="col-6 col-md-4 d-flex align-items-end">
-                    <button class="btn btn-warning fw-bold w-100"
+                    <button class="btn btn-outline-warning w-100"
+                            id="btn-agregar-carrito"
                             onclick="agregarAlCarrito()"
                             aria-label="Agregar producto al carrito">
-                                Agregar
+                        + Agregar al carrito
                     </button>
                 </div>
             </div>
-            <div class="bg-dark border border-secondary rounded p-3 mb-3"
-                role="region" aria-label="Carrito de venta">
-                <h5 class="text-warning mb-2"> Carrito</h5>
-                <ul id="listaVenta" class="list-unstyled mb-2"
+
+            <!-- Carrito -->
+            <div class="carrito-box" role="region" aria-label="Carrito de venta">
+                <div class="carrito-header">
+                    <span>🛍️</span>
+                    <h5>Carrito de venta</h5>
+                </div>
+                <ul id="listaVenta" class="list-unstyled mb-0"
                     aria-live="polite" aria-label="Productos en el carrito">
-                    <li class="text-secondary" id="carritoVacio">
+                    <li class="text-secondary" id="carritoVacio"
+                        style="justify-content:center;padding:12px 0;">
                         El carrito está vacío.
                     </li>
                 </ul>
-                <div class="d-flex justify-content-between align-items-center mt-2">
-                    <button class="btn btn-sm btn-outline-danger"
+                <div class="carrito-footer">
+                    <button class="btn btn-outline-danger btn-sm"
+                            id="btn-vaciar-carrito"
                             onclick="limpiarCarrito()"
                             aria-label="Vaciar carrito completo">
-                                Vaciar carrito
+                        🗑 Vaciar carrito
                     </button>
-                    <h5 id="totalVenta" class="text-warning mb-0"
-                        aria-live="polite" aria-label="Total de la venta">
+                    <div id="totalVenta" aria-live="polite" aria-label="Total de la venta">
                         Total: S/0.00
-                    </h5>
+                    </div>
                 </div>
             </div>
-            <!-- MÉTODO DE PAGO -->
-            <div class="row g-3">
+
+            <!-- Método de pago y confirmar -->
+            <div class="row g-3 mt-1">
                 <div class="col-12 col-md-4">
                     <label for="metodoPago" class="form-label">Método de pago</label>
                     <select id="metodoPago" class="form-select"
                             aria-label="Selecciona el método de pago">
-                        <option value="Efectivo"> Efectivo</option>
-                        <option value="Tarjeta"> Tarjeta</option>
-                        <option value="Yape"> Yape</option>
-                        <option value="Plin"> Plin</option>
+                        <option value="Efectivo">💵 Efectivo</option>
+                        <option value="Tarjeta">💳 Tarjeta</option>
+                        <option value="Yape">📱 Yape</option>
+                        <option value="Plin">📱 Plin</option>
                     </select>
                 </div>
                 <div class="col-12 col-md-4 d-flex align-items-end">
-                    <button class="btn btn-warning fw-bold w-100"
+                    <button class="btn btn-warning w-100"
+                            id="btn-registrar-venta"
                             onclick="registrarVenta()"
                             aria-label="Confirmar y registrar la venta">
-                            Registrar Venta
+                        ✓ Registrar Venta
                     </button>
                 </div>
             </div>
         </div>
+
+        <!-- Historial de ventas -->
         <div class="panel" aria-labelledby="titulo-historial">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2 id="titulo-historial" class="mb-0">Historial de ventas</h2>
-                <div class="d-flex gap-2 align-items-center">
-                    <label for="filtroFecha" class="form-label mb-0 text-secondary" style="font-size:13px;">
-                        Filtrar por fecha:
+            <div class="panel-header">
+                <div class="panel-title">
+                    <div class="panel-title-icon">📊</div>
+                    <h2 id="titulo-historial">Historial de ventas</h2>
+                </div>
+                <!-- Filtro de fecha -->
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <label for="filtroFecha"
+                        class="form-label mb-0"
+                        style="font-size:11px;letter-spacing:0.05em;">
+                        FILTRAR POR FECHA
                     </label>
                     <input type="date" id="filtroFecha"
                         class="form-control form-control-sm"
@@ -119,21 +170,23 @@
                         onchange="filtrarVentas()"
                         aria-label="Filtrar ventas por fecha">
                     <button class="btn btn-sm btn-outline-warning"
+                            id="btn-limpiar-filtro"
                             onclick="limpiarFiltro()"
                             aria-label="Limpiar filtro de fecha">
-                                Limpiar filtro
+                        Limpiar
                     </button>
                 </div>
             </div>
+
             <div class="table-responsive">
-                <table class="table table-dark table-hover table-bordered"
+                <table class="table table-dark table-hover"
                     aria-label="Historial de ventas registradas">
-                    <thead class="table-warning text-dark">
+                    <thead>
                         <tr>
                             <th scope="col">Código</th>
                             <th scope="col">Fecha</th>
                             <th scope="col">Total</th>
-                            <th scope="col">Pago</th>
+                            <th scope="col">Método de pago</th>
                             <th scope="col">Detalle</th>
                             <th scope="col">Acción</th>
                         </tr>
@@ -141,20 +194,23 @@
                     <tbody id="tablaVentas" aria-live="polite"></tbody>
                 </table>
             </div>
-            <p id="sinVentas" class="text-secondary text-center py-2 mb-0 d-none">
+            <div id="sinVentas" class="empty-state d-none">
+                <div class="empty-state-icon">🧾</div>
                 No hay ventas registradas aún.
-            </p>
+            </div>
         </div>
 
     </main>
 </div>
+
+<!-- ── MODAL DETALLE VENTA ───────────────────────────────── -->
 <div class="modal fade" id="modalDetalle" tabindex="-1"
     aria-labelledby="tituloModalDetalle" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="tituloModalDetalle">
-                    Detalle de venta
+                    🧾 Detalle de venta
                 </h5>
                 <button type="button" class="btn-close"
                         data-bs-dismiss="modal" aria-label="Cerrar"></button>
@@ -167,6 +223,8 @@
         </div>
     </div>
 </div>
+
+<!-- ── TOAST ──────────────────────────────────────────────── -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:9999">
     <div id="toastNotif" class="toast align-items-center text-bg-warning border-0"
         role="alert" aria-live="assertive" aria-atomic="true">

@@ -25,7 +25,7 @@ function actualizarSelect() {
         opt.value = i;
         let unid = p.unidad || "unid.";
         opt.textContent = p.nombre + " — S/" + p.precio.toFixed(2) + " (Stock: " + p.stock + " " + unid + ")";
-        if (p.stock === 0) { opt.disabled = true; opt.textContent += " [sin stock]"; }
+        if (p.stock === 0) { opt.disabled = true; opt.textContent += " (Sin stock)"; }
         sel.appendChild(opt);
     });
 }
@@ -217,8 +217,13 @@ function verDetalleVenta(index) {
 
     let filas = (v.detalle || []).map(function(item) {
         let sub = item.precio * item.cantidad;
+        let prodActual = productos.find(p => p.codigo === item.codigo);
+        let infoExtra = "";
+        if (!prodActual) infoExtra = " <span class='text-agotado'>(Producto eliminado)</span>";
+        else if (prodActual.stock === 0) infoExtra = " <span class='text-agotado'>(Producto agotado)</span>";
+
         return `<tr>
-            <td>${item.nombre}</td>
+            <td>${item.nombre}${infoExtra}</td>
             <td>${item.cantidad}</td>
             <td>S/${item.precio.toFixed(2)}</td>
             <td><strong>S/${sub.toFixed(2)}</strong></td>

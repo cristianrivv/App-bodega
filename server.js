@@ -63,7 +63,7 @@ app.get("/productos-api", async (req, res) => {
 /* POST /productos — registrar nuevo */
 app.post("/api/productos", async (req, res) => {
     try {
-        let { codigo, nombre, marca, precio, stock, unidad, vencimiento, fechaReabastecimiento } = req.body;
+        let { codigo, nombre, marca, precio, stock, stockMinimo, unidad, vencimiento, fechaReabastecimiento } = req.body;
         if (!codigo || !nombre || precio == null || stock == null) {
             return res.status(400).json({ error: "Datos incompletos" });
         }
@@ -74,7 +74,7 @@ app.post("/api/productos", async (req, res) => {
         if (datos.productos.find(p => p.codigo === codigo)) {
             return res.status(409).json({ error: "Código ya existe" });
         }
-        datos.productos.push({ codigo, nombre, marca: marca || "—", precio, stock,
+        datos.productos.push({ codigo, nombre, marca: marca || "—", precio, stock, stockMinimo: stockMinimo != null ? stockMinimo : 5,
                                 unidad: unidad || "unid.",
                                 vencimiento: vencimiento || "—",
                                 fechaReabastecimiento: fechaReabastecimiento || "—" });
@@ -90,7 +90,7 @@ app.post("/api/productos", async (req, res) => {
 app.put("/api/productos/:codigo", async (req, res) => {
     try {
         let codigo = req.params.codigo;
-        let { nombre, marca, precio, stock, unidad, vencimiento, fechaReabastecimiento } = req.body;
+        let { nombre, marca, precio, stock, stockMinimo, unidad, vencimiento, fechaReabastecimiento } = req.body;
         if (!nombre || precio == null || stock == null) {
             return res.status(400).json({ error: "Datos incompletos" });
         }
@@ -101,6 +101,7 @@ app.put("/api/productos/:codigo", async (req, res) => {
         prod.marca       = marca || prod.marca || "—";
         prod.precio      = precio;
         prod.stock       = stock;
+        prod.stockMinimo = stockMinimo != null ? stockMinimo : (prod.stockMinimo != null ? prod.stockMinimo : 5);
         prod.unidad      = unidad || prod.unidad || "unid.";
         prod.vencimiento = vencimiento || prod.vencimiento || "—";
         prod.fechaReabastecimiento = fechaReabastecimiento || prod.fechaReabastecimiento || "—";

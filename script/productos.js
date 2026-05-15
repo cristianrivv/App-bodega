@@ -15,6 +15,7 @@ function validarRegistro() {
     let nombre = document.getElementById("nombre");
     let precio = document.getElementById("precio");
     let stock  = document.getElementById("stock");
+    let stockMinimo = document.getElementById("stockMinimo");
     let ok = true;
     if (!nombre.value.trim()) {
         nombre.classList.add("is-invalid"); ok = false;
@@ -25,6 +26,9 @@ function validarRegistro() {
     if (isNaN(parseInt(stock.value)) || parseInt(stock.value) < 0) {
         stock.classList.add("is-invalid"); ok = false;
     } else { stock.classList.remove("is-invalid"); }
+    if (isNaN(parseInt(stockMinimo.value)) || parseInt(stockMinimo.value) < 0) {
+        stockMinimo.classList.add("is-invalid"); ok = false;
+    } else { stockMinimo.classList.remove("is-invalid"); }
     return ok;
 }
 
@@ -33,6 +37,7 @@ async function registrarProducto() {
     let nombre     = document.getElementById("nombre").value.trim();
     let precio     = parseFloat(document.getElementById("precio").value);
     let stock      = parseInt(document.getElementById("stock").value);
+    let stockMinimo = parseInt(document.getElementById("stockMinimo").value);
     let unidad     = document.getElementById("unidad").value;
     let marca      = document.getElementById("marca").value.trim();
     let vencInput  = document.getElementById("vencimiento").value;
@@ -50,7 +55,7 @@ async function registrarProducto() {
         hoy.getDate().toString().padStart(2,"0") + "/" +
         (hoy.getMonth()+1).toString().padStart(2,"0") + "/" +
         hoy.getFullYear();
-    let nuevo = { codigo, nombre, marca: marca || "—", precio, stock, unidad,
+    let nuevo = { codigo, nombre, marca: marca || "—", precio, stock, stockMinimo, unidad,
         vencimiento, fechaReabastecimiento: fechaRegistro };
     try {
         let res = await fetch("/api/productos", {
@@ -86,11 +91,12 @@ function mostrarProductos() {
     sinMsg.classList.add("d-none");
 
     productos.forEach(function(p, i) {
+        let limite = p.stockMinimo != null ? p.stockMinimo : 5;
         let claseStock = p.stock === 0
-            ? "text-danger fw-bold"
-            : p.stock <= 5 ? "stock-bajo" : "stock-ok";
+            ? "stock-critico"
+            : p.stock <= limite ? "stock-bajo" : "stock-ok";
 
-        let iconStock = p.stock === 0 ? "🚫" : p.stock <= 5 ? "⚠️" : "";
+        let iconStock = p.stock === 0 ? "🚫" : p.stock <= limite ? "⚠️" : "";
         let fechaR    = p.fechaReabastecimiento || "—";
         let unidad    = p.unidad || "unid.";
         let marca     = p.marca || "—";
@@ -114,6 +120,7 @@ function mostrarProductos() {
             <td><small>${marca}</small></td>
             <td>S/${p.precio.toFixed(2)}</td>
             <td class="${claseStock}">${p.stock} ${iconStock}</td>
+            <td>${limite}</td>
             <td><span class="badge-pago">${unidad}</span></td>
             <td class="${vencClase}"><small>${vencTexto}</small></td>
             <td><small>${fechaR}</small></td>
@@ -139,6 +146,7 @@ function abrirModalEditar(index) {
     document.getElementById("editMarca").value           = p.marca === "—" ? "" : (p.marca || "");
     document.getElementById("editPrecio").value          = p.precio;
     document.getElementById("editStockNuevo").value      = p.stock;
+    document.getElementById("editStockMinimo").value     = p.stockMinimo != null ? p.stockMinimo : 5;
     document.getElementById("editStockActual").textContent = p.stock;
     document.getElementById("editUnidadActual").textContent = " " + (p.unidad || "unid.");
     let selUnidad = document.getElementById("editUnidad");
@@ -171,10 +179,12 @@ async function guardarEdicion() {
     let nombreInput  = document.getElementById("editNombre");
     let precioInput  = document.getElementById("editPrecio");
     let stockInput   = document.getElementById("editStockNuevo");
+    let stockMinInput = document.getElementById("editStockMinimo");
     let fechaInput   = document.getElementById("editFechaReabastecimiento");
     let nombre  = nombreInput.value.trim();
     let precio  = parseFloat(precioInput.value);
     let stock   = parseInt(stockInput.value);
+    let stockMinimo = parseInt(stockMinInput.value);
     let unidad  = document.getElementById("editUnidad").value;
     let marca   = document.getElementById("editMarca").value.trim() || "—";
     let vencInput = document.getElementById("editVencimiento").value;
@@ -191,6 +201,8 @@ async function guardarEdicion() {
     else precioInput.classList.remove("is-invalid");
     if (isNaN(stock) || stock < 0) { stockInput.classList.add("is-invalid"); ok = false; }
     else stockInput.classList.remove("is-invalid");
+    if (isNaN(stockMinimo) || stockMinimo < 0) { stockMinInput.classList.add("is-invalid"); ok = false; }
+    else stockMinInput.classList.remove("is-invalid");
     if (!ok) return;
 
     /* Formatear fecha seleccionada  */
@@ -199,7 +211,7 @@ async function guardarEdicion() {
         let partes = fechaInput.value.split("-");
         fechaFormateada = partes[2] + "/" + partes[1] + "/" + partes[0];
     }
-    let datosActualizados = { codigo, nombre, marca, precio, stock, unidad,
+    let datosActualizados = { codigo, nombre, marca, precio, stock, stockMinimo, unidad,
         vencimiento, fechaReabastecimiento: fechaFormateada };
     try {
         let res = await fetch("/api/productos/" + codigo, {
@@ -243,10 +255,12 @@ async function eliminarProducto(index) {
     }
 }
 function limpiarFormulario() {
-    ["nombre","precio","stock","marca","vencimiento"].forEach(function(id) {
+    ["nombre","precio","stock","stockMinimo","marca","vencimiento"].forEach(function(id) {
         let el = document.getElementById(id);
-        el.value = "";
-        el.classList.remove("is-invalid","is-valid");
+        if (el) {
+            el.value = "";
+            el.classList.remove("is-invalid","is-valid");
+        }
     });
 }
 async function iniciarSistema() {
