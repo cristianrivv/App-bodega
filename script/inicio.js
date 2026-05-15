@@ -12,13 +12,72 @@ function mesAnioActual() {
     let h = new Date();
     return { mes: h.getMonth()+1, anio: h.getFullYear() };
 }
-function mostrarToast(msg) {
-    let el = document.getElementById("toastNotif");
-    let m  = document.getElementById("toastMensaje");
-    if (!el || !m) return;
-    m.textContent = msg;
-    bootstrap.Toast.getOrCreateInstance(el, { delay: 3000 }).show();
+function mostrarToast(msg, tipo = "info") {
+    let background = "var(--bg-surface-alt)"; // default
+    let icon = "info";
+    let color = "#fff";
+    
+    if (tipo === "danger") {
+        background = "linear-gradient(to right, #E05252, #c94040)";
+        icon = "warning-circle";
+    } else if (tipo === "warning") {
+        background = "linear-gradient(to right, #E89C2F, #d4871e)";
+        icon = "warning";
+    } else if (tipo === "success") {
+        background = "linear-gradient(to right, #4CAF7D, #3d9669)";
+        icon = "check-circle";
+    }
+
+    Toastify({
+        text: `<i class="ph-bold ph-${icon}" style="font-size: 18px;"></i> <span style="font-weight: 500;">${msg}</span>`,
+        duration: 3500,
+        close: true,
+        gravity: "top", // top or bottom
+        position: "right", // left, center or right
+        escapeMarkup: false,
+        style: {
+            background: background,
+            color: color,
+            borderRadius: "10px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            padding: "12px 18px",
+            fontFamily: "'Inter', sans-serif"
+        }
+    }).showToast();
 }
+
+/* ── Sidebar Toggle ─────────────────────────────────── */
+document.addEventListener("DOMContentLoaded", () => {
+    const btn     = document.getElementById("btn-toggle-sidebar");
+    const sidebar = document.querySelector(".sidebar");
+    const html    = document.documentElement;
+
+    if (!btn || !sidebar) return;
+
+    // 1. Sincronizar clase del sidebar con el estado pre-calculado en <html>
+    //    (la clase 'sidebar-pre-collapse' ya fijó el ancho sin transición)
+    if (html.classList.contains("sidebar-pre-collapse")) {
+        sidebar.classList.add("collapsed");
+    }
+
+    // 2. Remover la clase de pre-colapso y re-habilitar transiciones
+    //    Usamos requestAnimationFrame para esperar el primer frame pintado
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            html.classList.remove("sidebar-pre-collapse");
+        });
+    });
+
+    // 3. Toggle manual — solo el botón hamburguesa lo controla
+    btn.addEventListener("click", () => {
+        sidebar.classList.toggle("collapsed");
+        localStorage.setItem("sidebarCollapsed", sidebar.classList.contains("collapsed"));
+    });
+});
+
 function actualizarDashboard() {
     let hoy = fechaHoy();
     let { mes, anio } = mesAnioActual();
@@ -65,10 +124,11 @@ function actualizarDashboard() {
                 panelAlertas.innerHTML += `
                 <div class="alert-item alert-critico">
                     <div class="alert-info">
-                        <span class="alert-icon">🚫</span>
+                        <span class="alert-icon"><i class="ph-fill ph-prohibit"></i></span>
                         <div class="alert-details">
                             <h4>${p.nombre}</h4>
-                            <p>Sin stock disponible (Mínimo: ${limite} ${p.unidad || 'unid.'})</p>
+                            <p class="alert-status status-critico">Sin stock disponible</p>
+                            <span class="alert-meta">Mínimo recomendado: ${limite}</span>
                         </div>
                     </div>
                     <span class="alert-badge badge-critico">AGOTADO</span>
@@ -78,10 +138,11 @@ function actualizarDashboard() {
                 panelAlertas.innerHTML += `
                 <div class="alert-item alert-advertencia">
                     <div class="alert-info">
-                        <span class="alert-icon">⚠️</span>
+                        <span class="alert-icon"><i class="ph-fill ph-warning"></i></span>
                         <div class="alert-details">
                             <h4>${p.nombre}</h4>
-                            <p>Stock actual: ${p.stock} ${p.unidad || 'unid.'} (Mínimo: ${limite})</p>
+                            <p class="alert-status status-advertencia">Stock actual: ${p.stock}</p>
+                            <span class="alert-meta">Mínimo recomendado: ${limite}</span>
                         </div>
                     </div>
                     <span class="alert-badge badge-advertencia">STOCK BAJO</span>
@@ -127,7 +188,7 @@ function abrirModal(tipo) {
     let { mes, anio } = mesAnioActual();
 
     if (tipo === "hoy") {
-        titulo.textContent = "💰 Ventas de hoy — " + hoy;
+        titulo.innerHTML = `<i class="ph-fill ph-currency-circle-dollar modal-title-accent"></i> Ventas de hoy — ${hoy}`;
         let ventasHoy = ventas.filter(v => v.fecha === hoy);
 
         if (ventasHoy.length === 0) {
@@ -162,7 +223,7 @@ function abrirModal(tipo) {
     else if (tipo === "mes") {
         let meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
                     "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-        titulo.textContent = " Ganancias de " + meses[mes-1] + " " + anio;
+        titulo.innerHTML = `<i class="ph-fill ph-chart-line-up modal-title-accent"></i> Ganancias de ${meses[mes-1]} ${anio}`;
 
         let ventasMes = ventas.filter(function(v) {
             let p = v.fecha.split("/");
@@ -205,7 +266,7 @@ function abrirModal(tipo) {
     }
 
     else if (tipo === "top") {
-        titulo.textContent = " Productos más vendidos";
+        titulo.innerHTML = `<i class="ph-fill ph-trophy modal-title-accent"></i> Productos más vendidos`;
 
         let conteo = {};
         ventas.forEach(function(v) {
@@ -236,7 +297,7 @@ function abrirModal(tipo) {
                     let stockActual = prod ? prod.stock : "—";
                     let limite = prod ? (prod.stockMinimo != null ? prod.stockMinimo : 5) : 0;
                     let stockClase = prod && prod.stock === 0 ? "stock-critico" : (prod && prod.stock <= limite ? "stock-bajo" : "stock-ok");
-                    let iconStock = prod && prod.stock === 0 ? "🚫" : (prod && prod.stock <= limite ? "⚠️" : "");
+                    let iconStock = prod && prod.stock === 0 ? "<i class='ph-bold ph-prohibit text-danger'></i>" : (prod && prod.stock <= limite ? "<i class='ph-bold ph-warning text-warning'></i>" : "");
                     let medalla = medallas[i] || (i+1) + "°";
                     return `<tr>
                         <td>${medalla}</td>
@@ -252,7 +313,7 @@ function abrirModal(tipo) {
     }
 
     else if (tipo === "stock") {
-        titulo.textContent = " Productos con alertas de stock";
+        titulo.innerHTML = `<i class="ph-fill ph-bell modal-title-accent text-danger"></i> Productos con alertas de stock`;
         let bajos = productos.filter(p => p.stock <= (p.stockMinimo != null ? p.stockMinimo : 5));
         if (bajos.length === 0) {
             cuerpo.innerHTML = "<p class='text-success text-center py-3'> Todos los productos tienen stock suficiente.</p>";
@@ -273,7 +334,7 @@ function abrirModal(tipo) {
                     return `<tr>
                         <td>${p.codigo}</td>
                         <td>${p.nombre} <small class="text-secondary">(Mín: ${limite})</small></td>
-                        <td class="${claseStock}">${p.stock} ${p.stock===0?"🚫":"⚠️"}</td>
+                        <td class="${claseStock}">${p.stock} ${p.stock===0?"<i class='ph-bold ph-prohibit text-danger'></i>":"<i class='ph-bold ph-warning text-warning'></i>"}</td>
                         <td>S/${p.precio.toFixed(2)}</td>
                     </tr>`;
                 }).join("")}
@@ -297,7 +358,7 @@ async function iniciarSistema() {
         actualizarDashboard();
     } catch (err) {
         console.error(err);
-        mostrarToast(" No se pudo conectar con el servidor.");
+        mostrarToast(" No se pudo conectar con el servidor.", "danger");
     }
 }
 iniciarSistema();

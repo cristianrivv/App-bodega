@@ -4,13 +4,66 @@ let carrito        = [];
 let contadorVenta  = 1;
 let todasLasVentas = []; /* copia para filtros */
 
-function mostrarToast(msg) {
-    let el = document.getElementById("toastNotif");
-    let m  = document.getElementById("toastMensaje");
-    if (!el || !m) return;
-    m.textContent = msg;
-    bootstrap.Toast.getOrCreateInstance(el, { delay: 3500 }).show();
+function mostrarToast(msg, tipo = "info") {
+    let background = "var(--bg-surface-alt)"; // default
+    let icon = "info";
+    let color = "#fff";
+    
+    if (tipo === "danger") {
+        background = "linear-gradient(to right, #E05252, #c94040)";
+        icon = "warning-circle";
+    } else if (tipo === "warning") {
+        background = "linear-gradient(to right, #E89C2F, #d4871e)";
+        icon = "warning";
+    } else if (tipo === "success") {
+        background = "linear-gradient(to right, #4CAF7D, #3d9669)";
+        icon = "check-circle";
+    }
+
+    Toastify({
+        text: `<i class="ph-bold ph-${icon}" style="font-size: 18px;"></i> <span style="font-weight: 500;">${msg}</span>`,
+        duration: 3500,
+        close: true,
+        gravity: "top", // top or bottom
+        position: "right", // left, center or right
+        escapeMarkup: false,
+        style: {
+            background: background,
+            color: color,
+            borderRadius: "10px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            padding: "12px 18px",
+            fontFamily: "'Inter', sans-serif"
+        }
+    }).showToast();
 }
+
+/* ── Sidebar Toggle ─────────────────────────────────── */
+document.addEventListener("DOMContentLoaded", () => {
+    const btn     = document.getElementById("btn-toggle-sidebar");
+    const sidebar = document.querySelector(".sidebar");
+    const html    = document.documentElement;
+
+    if (!btn || !sidebar) return;
+
+    if (html.classList.contains("sidebar-pre-collapse")) {
+        sidebar.classList.add("collapsed");
+    }
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            html.classList.remove("sidebar-pre-collapse");
+        });
+    });
+
+    btn.addEventListener("click", () => {
+        sidebar.classList.toggle("collapsed");
+        localStorage.setItem("sidebarCollapsed", sidebar.classList.contains("collapsed"));
+    });
+});
 
 /* Seleccion de productos */
 function actualizarSelect() {
@@ -31,7 +84,7 @@ function actualizarSelect() {
 }
 function agregarAlCarrito() {
     if (productos.length === 0) {
-        mostrarToast(" No hay productos disponibles.");
+        mostrarToast("No hay productos disponibles.", "warning");
         return;
     }
 
@@ -42,21 +95,21 @@ function agregarAlCarrito() {
 
     if (isNaN(cantidad) || cantidad <= 0) {
         cantInput.classList.add("is-invalid");
-        mostrarToast(" Ingresa una cantidad válida.");
+        mostrarToast("Ingresa una cantidad válida.", "warning");
         return;
     }
     cantInput.classList.remove("is-invalid");
 
     let prod = productos[index];
     if (cantidad > prod.stock) {
-        mostrarToast(" Stock insuficiente. Disponible: " + prod.stock);
+        mostrarToast("Stock insuficiente. Disponible: " + prod.stock, "warning");
         return;
     }
 
     let existente = carrito.find(c => c.codigo === prod.codigo);
     if (existente) {
         if (existente.cantidad + cantidad > prod.stock) {
-            mostrarToast("La cantidad total supera el stock.");
+            mostrarToast("La cantidad total supera el stock.", "warning");
             return;
         }
         existente.cantidad += cantidad;
@@ -66,7 +119,12 @@ function agregarAlCarrito() {
         unidad: prod.unidad || "unid." });
     }
     cantInput.value = "";
+    guardarCarritoEnStorage();
     renderCarrito();
+}
+
+function guardarCarritoEnStorage() {
+    localStorage.setItem("bodegaCarrito", JSON.stringify(carrito));
 }
 
 function renderCarrito() {
@@ -93,7 +151,7 @@ function renderCarrito() {
             " — <strong>S/" + sub.toFixed(2) + "</strong></span>" +
             "<button class='btn btn-sm btn-outline-danger ms-2' " +
             "onclick='quitarDelCarrito(" + i + ")' " +
-            "aria-label='Quitar " + item.nombre + "'>✕</button>";
+            "aria-label='Quitar " + item.nombre + "'><i class='ph-bold ph-x'></i></button>";
         lista.appendChild(li);
     });
     document.getElementById("totalVenta").textContent = "Total: S/" + total.toFixed(2);
@@ -101,18 +159,20 @@ function renderCarrito() {
 function quitarDelCarrito(i) {
     let nombre = carrito[i].nombre;
     carrito.splice(i, 1);
+    guardarCarritoEnStorage();
     renderCarrito();
-    mostrarToast("\"" + nombre + "\" quitado del carrito.");
+    mostrarToast("\"" + nombre + "\" quitado del carrito.", "info");
 }
 function limpiarCarrito() {
     if (carrito.length === 0) return;
     if (!confirm("¿Vaciar el carrito?")) return;
     carrito = [];
+    guardarCarritoEnStorage();
     renderCarrito();
 }
 async function registrarVenta() {
     if (carrito.length === 0) {
-        mostrarToast("⚠️ El carrito está vacío.");
+        mostrarToast("El carrito está vacío.", "warning");
         return;
     }
 
@@ -120,7 +180,7 @@ async function registrarVenta() {
     for (let item of carrito) {
         let prod = productos.find(p => p.codigo === item.codigo);
         if (!prod || prod.stock < item.cantidad) {
-            mostrarToast("⚠️ Stock insuficiente para: " + item.nombre);
+            mostrarToast("Stock insuficiente para: " + item.nombre, "danger");
             return;
         }
     }
@@ -140,7 +200,7 @@ async function registrarVenta() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(nuevaVenta)
         });
-        if (!r1.ok) { mostrarToast(" Error al guardar la venta."); return; }
+        if (!r1.ok) { mostrarToast("Error al guardar la venta.", "danger"); return; }
 
         /* Desconta stock en el servidor */
         for (let item of carrito) {
@@ -152,6 +212,14 @@ async function registrarVenta() {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ stock: prod.stock })
                 });
+                
+                // Mostrar alerta de stock si corresponde
+                let limite = prod.stockMinimo != null ? prod.stockMinimo : 5;
+                if (prod.stock === 0) {
+                    setTimeout(() => mostrarToast(`Producto agotado: ${prod.nombre}`, "danger"), 500);
+                } else if (prod.stock <= limite) {
+                    setTimeout(() => mostrarToast(`Stock bajo del producto: ${prod.nombre} (Quedan: ${prod.stock})`, "warning"), 500);
+                }
             }
         }
 
@@ -159,11 +227,12 @@ async function registrarVenta() {
         todasLasVentas = [...ventas];
         contadorVenta++;
         carrito = [];
+        guardarCarritoEnStorage();
 
         renderCarrito();
         actualizarSelect();
         mostrarVentas(ventas);
-        mostrarToast(" Venta " + codigo + " registrada — S/" + total.toFixed(2));
+        mostrarToast("Venta " + codigo + " registrada — S/" + total.toFixed(2), "success");
 
     } catch (e) {
         mostrarToast(" No se pudo conectar con el servidor.");
@@ -201,7 +270,7 @@ function mostrarVentas(lista) {
                 <button class="btn btn-sm btn-danger"
                         onclick="eliminarVenta(${indexReal})"
                         aria-label="Eliminar venta ${v.codigo}">
-                    🗑
+                    <i class="ph-bold ph-trash"></i>
                 </button>
             </td>
         </tr>`;
@@ -266,7 +335,7 @@ async function eliminarVenta(index) {
     });
     try {
         let r = await fetch("/api/ventas/" + v.codigo, { method: "DELETE" });
-        if (!r.ok) { mostrarToast(" Error al eliminar."); 
+        if (!r.ok) { mostrarToast("Error al eliminar.", "danger"); 
             return; }
         /* Sincronizar stock restaurado */
         for (let item of (v.detalle || [])) {
@@ -283,9 +352,9 @@ async function eliminarVenta(index) {
         todasLasVentas = [...ventas];
         actualizarSelect();
         mostrarVentas(ventas);
-        mostrarToast(" Venta eliminada. Stock restaurado.");
+        mostrarToast("Venta eliminada. Stock restaurado.", "success");
     } catch (e) {
-        mostrarToast(" No se pudo conectar con el servidor.");
+        mostrarToast("No se pudo conectar con el servidor.", "danger");
         console.error(e);
     }
 }
@@ -320,12 +389,23 @@ async function iniciarSistema() {
             contadorVenta = parseInt(ultimo.replace("V","")) + 1;
         }
 
+        // Cargar carrito desde localStorage
+        let guardado = localStorage.getItem("bodegaCarrito");
+        if(guardado) {
+            try {
+                carrito = JSON.parse(guardado);
+            } catch(e) {
+                carrito = [];
+            }
+        }
+
         actualizarSelect();
+        renderCarrito();
         mostrarVentas(ventas);
 
     } catch (e) {
         console.error(e);
-        mostrarToast(" No se pudo conectar con el servidor.");
+        mostrarToast("No se pudo conectar con el servidor.", "danger");
     }
 }
 

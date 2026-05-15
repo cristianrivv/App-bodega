@@ -9,6 +9,17 @@
       "unidad": "kg",
       "vencimiento": "—",
       "fechaReabastecimiento": "30/01/2025"
+    },
+    {
+      "codigo": "P002",
+      "nombre": "aceite",
+      "marca": "primor",
+      "precio": 4.5,
+      "stock": 2,
+      "stockMinimo": 5,
+      "unidad": "unid",
+      "vencimiento": "—",
+      "fechaReabastecimiento": "14/05/2026"
     }
   ],
   "ventas": [
@@ -24,6 +35,36 @@
           "precio": 5.5,
           "cantidad": 20,
           "unidad": "kg"
+        }
+      ]
+    },
+    {
+      "codigo": "V002",
+      "fecha": "14/05/2026",
+      "total": 45,
+      "pago": "Efectivo",
+      "detalle": [
+        {
+          "codigo": "P002",
+          "nombre": "aceite",
+          "precio": 4.5,
+          "cantidad": 10,
+          "unidad": "unid"
+        }
+      ]
+    },
+    {
+      "codigo": "V003",
+      "fecha": "14/05/2026",
+      "total": 81,
+      "pago": "Efectivo",
+      "detalle": [
+        {
+          "codigo": "P002",
+          "nombre": "aceite",
+          "precio": 4.5,
+          "cantidad": 18,
+          "unidad": "unid"
         }
       ]
     }
